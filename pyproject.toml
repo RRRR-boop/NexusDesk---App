@@ -78,29 +78,54 @@ include_external_packages = true
 [[tool.importlinter.contracts]]
 name = "ui ne doit jamais importer integrations ou database"
 type = "forbidden"
+# allow_indirect_imports : le cahier des charges interdit les imports directs d'une couche
+# vers une autre ; passer par la couche intermédiaire autorisée (ex. ui -> viewmodels ->
+# services -> repositories -> database) est le fonctionnement normal de l'architecture en
+# couches, pas une violation.
+allow_indirect_imports = true
 source_modules = ["nexusdesk.ui"]
 forbidden_modules = ["nexusdesk.integrations", "nexusdesk.database"]
 
 [[tool.importlinter.contracts]]
 name = "viewmodels ne doit jamais importer ui ou integrations"
 type = "forbidden"
+# allow_indirect_imports : le cahier des charges interdit les imports directs d'une couche
+# vers une autre ; passer par la couche intermédiaire autorisée (ex. ui -> viewmodels ->
+# services -> repositories -> database) est le fonctionnement normal de l'architecture en
+# couches, pas une violation.
+allow_indirect_imports = true
 source_modules = ["nexusdesk.viewmodels"]
 forbidden_modules = ["nexusdesk.ui", "nexusdesk.integrations"]
 
 [[tool.importlinter.contracts]]
 name = "services ne doit jamais importer ui, Qt ou integrations directement"
 type = "forbidden"
+# allow_indirect_imports : le cahier des charges interdit les imports directs d'une couche
+# vers une autre ; passer par la couche intermédiaire autorisée (ex. ui -> viewmodels ->
+# services -> repositories -> database) est le fonctionnement normal de l'architecture en
+# couches, pas une violation.
+allow_indirect_imports = true
 source_modules = ["nexusdesk.services"]
 forbidden_modules = ["nexusdesk.ui", "PySide6", "nexusdesk.integrations"]
 
 [[tool.importlinter.contracts]]
 name = "repositories et database ne doivent jamais importer services ou ui"
 type = "forbidden"
+# allow_indirect_imports : le cahier des charges interdit les imports directs d'une couche
+# vers une autre ; passer par la couche intermédiaire autorisée (ex. ui -> viewmodels ->
+# services -> repositories -> database) est le fonctionnement normal de l'architecture en
+# couches, pas une violation.
+allow_indirect_imports = true
 source_modules = ["nexusdesk.repositories", "nexusdesk.database"]
 forbidden_modules = ["nexusdesk.services", "nexusdesk.ui"]
 
 [[tool.importlinter.contracts]]
 name = "integrations ne doit jamais importer services ou ui"
 type = "forbidden"
+# allow_indirect_imports : le cahier des charges interdit les imports directs d'une couche
+# vers une autre ; passer par la couche intermédiaire autorisée (ex. ui -> viewmodels ->
+# services -> repositories -> database) est le fonctionnement normal de l'architecture en
+# couches, pas une violation.
+allow_indirect_imports = true
 source_modules = ["nexusdesk.integrations"]
 forbidden_modules = ["nexusdesk.services", "nexusdesk.ui"]

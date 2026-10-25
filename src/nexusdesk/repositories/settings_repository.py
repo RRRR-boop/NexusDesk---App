@@ -29,6 +29,12 @@ class SettingsRepository:
             flat: dict[str, Any] = {row.key: json.loads(row.value) for row in rows}
         return AppSettings.model_validate(_unflatten(flat))
 
+    def get_raw(self, key: str, default: Any = None) -> Any:
+        """Lit une clé libre (ex. état d'interface) sans passer par le schéma AppSettings."""
+        with session_scope(self._session_factory) as session:
+            row = session.get(SettingRow, key)
+            return json.loads(row.value) if row is not None else default
+
     def set(self, key: str, value: Any) -> None:
         self._write_queue.submit_write(lambda session: self._upsert(session, key, value)).result()
 

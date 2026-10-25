@@ -36,7 +36,10 @@ class AppearanceSettings(BaseModel):
 
 
 class AppSettings(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # "ignore" (pas "forbid") : la table clé/valeur (ADR-0003) peut contenir des clés hors
+    # du schéma déclaré (état d'interface comme le repli de la barre latérale, réglages des
+    # lots futurs) sans faire échouer la reconstruction des onglets Général/Apparence.
+    model_config = ConfigDict(extra="ignore")
 
     general: GeneralSettings = GeneralSettings()
     appearance: AppearanceSettings = AppearanceSettings()
