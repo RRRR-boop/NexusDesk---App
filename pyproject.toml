@@ -45,6 +45,9 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "N"]
+# N818 : les noms d'erreurs (DependencyMissing, PermissionDenied, Timeout, Cancelled) sont
+# imposés tels quels par le cahier des charges (section 4), sans suffixe "Error".
+ignore = ["N818"]
 
 [tool.mypy]
 python_version = "3.12"
