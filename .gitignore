@@ -1,0 +1,37 @@
+# Environnements Python / uv
+.venv/
+__pycache__/
+*.pyc
+.python-version-cache/
+
+# Build / packaging
+dist/
+build/
+*.spec.bak
+
+# Bases de données locales (jamais commitées : données utilisateur)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Logs et caches
+logs/
+*.log
+
+# Outils
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Éditeurs
+.vscode/
+*.swp
+
+# Plans et artefacts de session (non liés au code du projet)
+reports/
+
+# Configuration locale Claude Code (propre à la machine)
+.claude/settings.local.json
