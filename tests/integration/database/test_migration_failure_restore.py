@@ -46,7 +46,7 @@ def test_failed_migration_restores_existing_data(tmp_path: Path, monkeypatch) ->
         assert second_result.read_only is True
 
         # Deux sauvegardes au total : une pour la migration initiale, une avant la tentative
-        # échouée.
+        # échouée (horodatage à la microseconde pour exclure toute collision de nom).
         assert len(list(backups_dir.glob("*.db"))) == 2
     finally:
         engine.dispose()

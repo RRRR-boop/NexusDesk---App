@@ -50,11 +50,20 @@ def test_second_instance_detects_mutex_and_delivers_command() -> None:
         text=True,
     )
     try:
-        time.sleep(1.0)  # laisse le processus enfant acquérir le mutex et démarrer le tube
-
-        guard = SingleInstanceGuard()
-        assert guard.acquire() is False  # le process enfant détient déjà le mutex
-        guard.release()
+        # Attend que le processus enfant ait acquis le mutex, en sondant plutôt qu'avec un
+        # délai fixe (le démarrage de l'enfant — import de PySide6/SQLAlchemy — n'a pas une
+        # durée garantie, surtout sous instrumentation de couverture).
+        deadline = time.monotonic() + 10
+        mutex_held_by_child = False
+        while time.monotonic() < deadline:
+            guard = SingleInstanceGuard()
+            acquired = guard.acquire()
+            guard.release()
+            if not acquired:
+                mutex_held_by_child = True
+                break
+            time.sleep(0.1)
+        assert mutex_held_by_child, "le processus enfant n'a jamais acquis le mutex"
 
         delivered = send_command(OPEN_MAIN_WINDOW, timeout_ms=5000)
         assert delivered is True

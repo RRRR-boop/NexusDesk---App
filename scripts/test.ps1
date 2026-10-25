@@ -29,6 +29,9 @@ try {
     }
 
     uv run pytest @pytestArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "Des tests ont echoue (code $LASTEXITCODE)"
+    }
 }
 finally {
     Pop-Location

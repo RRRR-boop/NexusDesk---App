@@ -9,26 +9,32 @@ param()
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
+function Invoke-Step {
+    param(
+        [Parameter(Mandatory = $true)][string]$Label,
+        [Parameter(Mandatory = $true)][scriptblock]$Command
+    )
+    Write-Host "== $Label ==" -ForegroundColor Cyan
+    & $Command
+    if ($LASTEXITCODE -ne 0) {
+        throw "Echec : $Label (code $LASTEXITCODE)"
+    }
+}
+
 Push-Location $repoRoot
 try {
-    Write-Host "== Ruff (lint) ==" -ForegroundColor Cyan
-    uv run ruff check src tests
-
-    Write-Host "== Ruff (format) ==" -ForegroundColor Cyan
-    uv run ruff format --check src tests
-
-    Write-Host "== mypy --strict ==" -ForegroundColor Cyan
-    uv run mypy src
-
-    Write-Host "== import-linter (regles de couches) ==" -ForegroundColor Cyan
-    uv run lint-imports
-
-    Write-Host "== pip-audit (vulnerabilites) ==" -ForegroundColor Cyan
-    uv run pip-audit
+    Invoke-Step "Ruff (lint)" { uv run ruff check src tests }
+    Invoke-Step "Ruff (format)" { uv run ruff format --check src tests }
+    Invoke-Step "mypy --strict" { uv run mypy src }
+    Invoke-Step "import-linter (regles de couches)" { uv run lint-imports }
+    Invoke-Step "pip-audit (vulnerabilites)" { uv run pip-audit }
 
     Write-Host "== Inventaire des licences ==" -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path "docs" | Out-Null
     uv run pip-licenses --format=markdown --output-file docs/licences-tierces.md
+    if ($LASTEXITCODE -ne 0) {
+        throw "Echec : inventaire des licences (code $LASTEXITCODE)"
+    }
     Write-Host "Inventaire ecrit dans docs/licences-tierces.md"
 
     Write-Host "Toutes les verifications sont passees." -ForegroundColor Green

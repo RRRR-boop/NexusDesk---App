@@ -57,7 +57,9 @@ def ensure_up_to_date(engine: Engine, db_path: Path, backups_dir: Path) -> Migra
     if current_revision == head_revision:
         return MigrationResult(applied=False, read_only=False, message="Base à jour.")
 
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    # Microsecondes incluses : deux migrations très rapprochées dans le temps (tests,
+    # redémarrages rapides) ne doivent jamais partager le même nom de fichier de sauvegarde.
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
     backup_path = backups_dir / f"pre-migration-{db_path.stem}-{timestamp}.db"
     backup_database(db_path, backup_path)
 

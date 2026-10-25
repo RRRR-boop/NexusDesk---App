@@ -18,6 +18,9 @@ try {
 
     Write-Host "== PyInstaller (mode dossier) ==" -ForegroundColor Cyan
     uv run pyinstaller nexusdesk.spec --noconfirm --clean
+    if ($LASTEXITCODE -ne 0) {
+        throw "PyInstaller a echoue (code $LASTEXITCODE)"
+    }
 
     $distDir = Join-Path "dist" "NexusDesk"
     if (-not (Test-Path $distDir)) {
