@@ -41,7 +41,12 @@ def build_excluded_paths(scan_root: Path) -> set[Path]:
 
 
 def is_excluded(path: Path, excluded_paths: set[Path], scan_root: Path) -> bool:
-    resolved = path.resolve()
-    if resolved == scan_root.resolve():
+    """``path`` est toujours un chemin absolu déjà fourni par ``os.scandir`` (jamais de
+    segment ``..`` à normaliser) : comparer directement plutôt que d'appeler
+    ``Path.resolve()`` évite un aller-retour disque par entrée. Mesuré empiriquement
+    (ADR-0011) : ``Path.resolve()`` coûte à lui seul plusieurs centaines de microsecondes
+    par appel sous Windows, ce qui aurait dominé le temps total d'un scan à 1M de fichiers
+    si appelé (deux fois) pour chaque entrée."""
+    if path == scan_root:
         return False
-    return any(resolved == excluded or excluded in resolved.parents for excluded in excluded_paths)
+    return any(path == excluded or excluded in path.parents for excluded in excluded_paths)

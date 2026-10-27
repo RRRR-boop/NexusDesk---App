@@ -2,13 +2,19 @@
 
 Parcours **itératif à pile explicite** sur ``os.scandir`` — jamais ``os.walk`` ni récursion
 Python profonde. La détection d'identité de fichier (liens physiques) n'est appelée que
-lorsque ``stat.st_nlink > 1`` : stratégie mesurée empiriquement (ADR-0011), ~750 000
-fichiers/s sans elle contre ~700 fichiers/s si elle était appelée systématiquement sur
-chaque fichier. Les fichiers OneDrive à la demande ne sont ni lus ni hachés.
+lorsque ``stat.st_nlink > 1``, et la taille réelle sur disque n'est recalculée via l'appel
+Win32 coûteux que pour les fichiers compressés/creux (``FILE_ATTRIBUTE_COMPRESSED``/
+``SPARSE_FILE``) : stratégies mesurées empiriquement à l'échelle réelle d'1M de fichiers
+(ADR-0011). Le ramasse-miettes cyclique est désactivé pendant le parcours (aucun cycle de
+référence dans ce modèle de données ; le comptage de références de CPython continue de
+libérer la mémoire normalement) : son coût croît avec le nombre d'objets vivants
+simultanément (jusqu'à 1M de ``FileNode``), ce qui le rendait de plus en plus coûteux à
+l'approche d'1M de fichiers. Les fichiers OneDrive à la demande ne sont ni lus ni hachés.
 """
 
 from __future__ import annotations
 
+import gc
 import heapq
 import os
 from datetime import datetime
@@ -43,6 +49,10 @@ _FILE_ATTRIBUTE_RECALL_ON_OPEN = 0x40000
 _FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x400000
 _ONEDRIVE_PLACEHOLDER_MASK = _FILE_ATTRIBUTE_RECALL_ON_OPEN | _FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS
 
+_FILE_ATTRIBUTE_SPARSE_FILE = 0x200
+_FILE_ATTRIBUTE_COMPRESSED = 0x800
+_SIZE_ON_DISK_MAY_DIFFER_MASK = _FILE_ATTRIBUTE_SPARSE_FILE | _FILE_ATTRIBUTE_COMPRESSED
+
 _ERROR_FILENAME_EXCED_RANGE = 206
 _ERROR_SHARING_VIOLATION = 32
 _ERROR_LOCK_VIOLATION = 33
@@ -54,6 +64,14 @@ def is_onedrive_placeholder(attributes: int) -> bool:
 
 def is_reparse_point(attributes: int) -> bool:
     return bool(attributes & _FILE_ATTRIBUTE_REPARSE_POINT)
+
+
+def size_on_disk_may_differ_from_logical_size(attributes: int) -> bool:
+    """Fichier compressé ou creux : seul cas où la taille réelle sur disque peut différer
+    notablement de la taille logique. Pour tout autre fichier, l'écart possible se limite à
+    l'arrondi au cluster NTFS (quelques Ko), négligeable à l'agrégat — mesuré empiriquement
+    comme le second poste de coût après la détection des liens physiques (ADR-0011)."""
+    return bool(attributes & _SIZE_ON_DISK_MAY_DIFFER_MASK)
 
 
 def classify_os_error(exc: OSError) -> SkippedReason:
@@ -180,47 +198,55 @@ def build_scan_task(
         stack: list[tuple[Path, int]] = [(options.root, 0)]
         processed = 0
 
-        while stack:
-            token.raise_if_cancelled()
-            current_path, depth = stack.pop()
-            folder = accumulator.get_or_create_folder(current_path, depth)
-            accumulator.dir_count += 1
-
-            try:
-                entries = list(os.scandir(current_path))
-            except OSError as exc:
-                accumulator.add_skipped(current_path, "inaccessible", classify_os_error(exc))
-                continue
-
-            for entry in entries:
+        gc_was_enabled = gc.isenabled()
+        gc.disable()  # aucun cycle de référence dans ce modèle de données (ADR-0011)
+        try:
+            while stack:
                 token.raise_if_cancelled()
-                entry_path = Path(entry.path)
-                processed += 1
-
-                if is_excluded(entry_path, excluded_paths, options.root):
-                    accumulator.add_skipped(entry_path, "excluded_default", "excluded_path")
-                    continue
+                current_path, depth = stack.pop()
+                folder = accumulator.get_or_create_folder(current_path, depth)
+                accumulator.dir_count += 1
 
                 try:
-                    is_dir = entry.is_dir(follow_symlinks=False)
+                    entries = list(os.scandir(current_path))
                 except OSError as exc:
-                    accumulator.add_skipped(entry_path, "inaccessible", classify_os_error(exc))
+                    accumulator.add_skipped(current_path, "inaccessible", classify_os_error(exc))
                     continue
 
-                if is_dir:
-                    _handle_directory(entry, entry_path, depth, accumulator, stack)
-                else:
-                    _handle_file(
-                        entry,
-                        entry_path,
-                        folder,
-                        accumulator,
-                        get_size_on_disk,
-                        get_hardlink_key,
-                    )
+                for entry in entries:
+                    token.raise_if_cancelled()
+                    entry_path = Path(entry.path)
+                    processed += 1
 
-                if processed % _PROGRESS_EVERY_N_ENTRIES == 0:
-                    reporter.report(0.0, step=str(current_path), message=f"{processed} éléments")
+                    if is_excluded(entry_path, excluded_paths, options.root):
+                        accumulator.add_skipped(entry_path, "excluded_default", "excluded_path")
+                        continue
+
+                    try:
+                        is_dir = entry.is_dir(follow_symlinks=False)
+                    except OSError as exc:
+                        accumulator.add_skipped(entry_path, "inaccessible", classify_os_error(exc))
+                        continue
+
+                    if is_dir:
+                        _handle_directory(entry, entry_path, depth, accumulator, stack)
+                    else:
+                        _handle_file(
+                            entry,
+                            entry_path,
+                            folder,
+                            accumulator,
+                            get_size_on_disk,
+                            get_hardlink_key,
+                        )
+
+                    if processed % _PROGRESS_EVERY_N_ENTRIES == 0:
+                        reporter.report(
+                            0.0, step=str(current_path), message=f"{processed} éléments"
+                        )
+        finally:
+            if gc_was_enabled:
+                gc.enable()
 
         accumulator.propagate_folder_sizes()
         finished_at = datetime.now()
@@ -311,12 +337,17 @@ def _handle_file(
         # Jamais lu ni ouvert : la taille sur disque réelle est déjà connue sans
         # déclencher le moindre téléchargement (section 11).
         size_on_disk = stat_result.st_size
-    else:
+    elif size_on_disk_may_differ_from_logical_size(stat_result.st_file_attributes):
         try:
             size_on_disk = get_size_on_disk(entry_path)
         except OSError as exc:
             accumulator.add_skipped(entry_path, "inaccessible", classify_os_error(exc))
             return
+    else:
+        # Ni compressé ni creux : appeler l'API Win32 coûteuse n'apporterait qu'un
+        # arrondi au cluster NTFS (quelques Ko), jamais la taille logique elle-même
+        # (mesuré empiriquement comme le second poste de coût à l'échelle, ADR-0011).
+        size_on_disk = stat_result.st_size
 
     file_node = FileNode(
         path=entry_path,

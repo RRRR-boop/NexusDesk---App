@@ -1,4 +1,4 @@
-"""Entités SQLAlchemy du module DiskPilot (section 11, cf. ADR-0012 pour la rétention)."""
+"""Entités SQLAlchemy du module DiskPilot (section 11, cf. ADR-0013 pour la rétention)."""
 
 from __future__ import annotations
 
