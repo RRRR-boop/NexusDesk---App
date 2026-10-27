@@ -24,6 +24,7 @@ from nexusdesk.database.engine import create_sqlite_engine
 from nexusdesk.database.migration_runner import ensure_up_to_date
 from nexusdesk.database.session import make_session_factory
 from nexusdesk.database.write_queue import WriteQueue
+from nexusdesk.integrations.windows import filesystem as diskpilot_filesystem
 from nexusdesk.integrations.windows.mica import apply_mica
 from nexusdesk.integrations.windows.notifications import show_notification
 from nexusdesk.integrations.windows.single_instance import (
@@ -33,12 +34,20 @@ from nexusdesk.integrations.windows.single_instance import (
 )
 from nexusdesk.integrations.windows.startup import set_enabled as set_startup_enabled
 from nexusdesk.integrations.windows.tray import TrayIcon
+from nexusdesk.models.diskpilot_cache import CacheBase
+from nexusdesk.repositories.diskpilot_duplicate_repository import (
+    DiskPilotDuplicateRepository,
+)
+from nexusdesk.repositories.diskpilot_hash_cache_repository import (
+    DiskPilotHashCacheRepository,
+)
+from nexusdesk.repositories.diskpilot_scan_repository import DiskPilotScanRepository
 from nexusdesk.repositories.settings_repository import SettingsRepository
 from nexusdesk.ui.pages.app_manager_page import AppManagerPage
 from nexusdesk.ui.pages.clipvault_page import ClipVaultPage
 from nexusdesk.ui.pages.dashboard_page import DashboardPage
 from nexusdesk.ui.pages.diagnostics_page import DiagnosticsPage
-from nexusdesk.ui.pages.diskpilot_page import DiskPilotPage
+from nexusdesk.ui.pages.diskpilot import DiskPilotPage
 from nexusdesk.ui.pages.logdoctor_page import LogDoctorPage
 from nexusdesk.ui.pages.netwatch_page import NetWatchPage
 from nexusdesk.ui.pages.screentext_page import ScreenTextPage
@@ -48,6 +57,13 @@ from nexusdesk.ui.theme.icon_provider import load_icon
 from nexusdesk.ui.theme.theme_manager import ThemeManager
 from nexusdesk.ui.theme.tokens import colors_for
 from nexusdesk.viewmodels.diagnostics_viewmodel import DiagnosticsViewModel
+from nexusdesk.viewmodels.diskpilot_cleanup_viewmodel import CleanupSuggestionsViewModel
+from nexusdesk.viewmodels.diskpilot_deletion_viewmodel import DeletionViewModel
+from nexusdesk.viewmodels.diskpilot_duplicates_viewmodel import DuplicatesViewModel
+from nexusdesk.viewmodels.diskpilot_history_viewmodel import ScanHistoryViewModel
+from nexusdesk.viewmodels.diskpilot_scan_viewmodel import ScanViewModel
+from nexusdesk.viewmodels.diskpilot_viewmodel import DiskPilotViewModel
+from nexusdesk.viewmodels.diskpilot_volumes_viewmodel import VolumesViewModel
 from nexusdesk.viewmodels.settings_viewmodel import SettingsViewModel
 from nexusdesk.viewmodels.shell_viewmodel import ShellViewModel
 
@@ -85,6 +101,21 @@ class Application:
         self._write_queue = WriteQueue(session_factory)
         self.settings_repository = SettingsRepository(session_factory, self._write_queue)
 
+        diskpilot_cache_db_path = paths.get_cache_dir() / "diskpilot_hash_cache.db"
+        self._diskpilot_cache_engine = create_sqlite_engine(diskpilot_cache_db_path)
+        CacheBase.metadata.create_all(self._diskpilot_cache_engine)  # ADR-0015 : hors Alembic
+        diskpilot_cache_session_factory = make_session_factory(self._diskpilot_cache_engine)
+        self._diskpilot_cache_write_queue = WriteQueue(diskpilot_cache_session_factory)
+
+        diskpilot_scan_repository = DiskPilotScanRepository(session_factory, self._write_queue)
+        diskpilot_scan_repository.mark_stale_running_as_failed()
+        diskpilot_duplicate_repository = DiskPilotDuplicateRepository(
+            session_factory, self._write_queue
+        )
+        diskpilot_hash_cache_repository = DiskPilotHashCacheRepository(
+            diskpilot_cache_session_factory, self._diskpilot_cache_write_queue
+        )
+
         self.task_manager = TaskManager()
         self.theme_manager = ThemeManager(qt_app, mica_applier=apply_mica)
 
@@ -94,6 +125,26 @@ class Application:
 
         checks = self._build_diagnostic_checks(nexusdesk_db_path, metrics_db_path)
         self.diagnostics_viewmodel = DiagnosticsViewModel(checks, self.task_manager)
+
+        self.diskpilot_viewmodel = DiskPilotViewModel(
+            volumes=VolumesViewModel(
+                diskpilot_filesystem.list_volumes, self.settings_repository, self.task_manager
+            ),
+            scan=ScanViewModel(
+                diskpilot_filesystem.get_size_on_disk,
+                diskpilot_filesystem.get_hardlink_key,
+                diskpilot_scan_repository,
+                self.task_manager,
+            ),
+            duplicates=DuplicatesViewModel(
+                diskpilot_hash_cache_repository, diskpilot_duplicate_repository, self.task_manager
+            ),
+            deletion=DeletionViewModel(diskpilot_filesystem.send_to_recycle_bin, self.task_manager),
+            cleanup=CleanupSuggestionsViewModel(
+                diskpilot_filesystem.open_storage_sense, self.task_manager
+            ),
+            history=ScanHistoryViewModel(diskpilot_scan_repository, self.task_manager),
+        )
 
         appearance = self.settings_viewmodel.settings.appearance
         colors = colors_for(self.theme_manager.resolve_theme(appearance))
@@ -105,13 +156,19 @@ class Application:
         self.main_window.register_page("netwatch", NetWatchPage())
         self.main_window.register_page("screentext", ScreenTextPage())
         self.main_window.register_page("logdoctor", LogDoctorPage())
-        self.main_window.register_page("diskpilot", DiskPilotPage())
+        self.diskpilot_page = DiskPilotPage(
+            self.diskpilot_viewmodel,
+            diskpilot_filesystem.reveal_in_explorer,
+            self.settings_viewmodel.settings.diskpilot.min_duplicate_size_bytes,
+        )
+        self.main_window.register_page("diskpilot", self.diskpilot_page)
         self.main_window.register_page("clipvault", ClipVaultPage())
         self.main_window.register_page("settings", SettingsPage(self.settings_viewmodel))
         self.main_window.register_page("diagnostics", DiagnosticsPage(self.diagnostics_viewmodel))
         self.main_window.minimized_to_tray.connect(self._on_minimized_to_tray)
 
         self.theme_manager.register_mica_window(int(self.main_window.winId()))
+        self.theme_manager.theme_changed.connect(self.diskpilot_page.set_theme)
         self.theme_manager.apply(appearance)
         self.main_window.set_close_behavior(self.settings_viewmodel.settings.general.close_behavior)
 
@@ -208,6 +265,8 @@ class Application:
         self.task_manager.cancel_all()
         self.task_manager.wait_for_done(3000)
         self._write_queue.stop(3.0)
+        self._diskpilot_cache_write_queue.stop(3.0)
         self.command_server.stop(1.0)
         self._nexusdesk_engine.dispose()
         self._metrics_engine.dispose()
+        self._diskpilot_cache_engine.dispose()

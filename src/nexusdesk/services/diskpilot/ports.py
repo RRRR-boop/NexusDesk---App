@@ -42,7 +42,10 @@ class DeletionOutcomeLike(Protocol):
 
 GetSizeOnDisk = Callable[[Path], int]
 GetHardlinkKey = Callable[[Path], "tuple[int, int, int] | None"]
-ListVolumes = Callable[[], "list[VolumeInfoLike]"]
-SendToRecycleBin = Callable[[Sequence[Path]], "list[DeletionOutcomeLike]"]
+# Sequence (covariante) plutôt que list (invariante) : les dataclasses concrètes
+# renvoient des list[VolumeInfo]/list[DeletionOutcome], que mypy n'accepte en retour d'un
+# Callable que si le type déclaré ici admet la variance (Protocol + Sequence).
+ListVolumes = Callable[[], "Sequence[VolumeInfoLike]"]
+SendToRecycleBin = Callable[[Sequence[Path]], "Sequence[DeletionOutcomeLike]"]
 RevealInExplorer = Callable[[Path], bool]
 OpenStorageSense = Callable[[], bool]

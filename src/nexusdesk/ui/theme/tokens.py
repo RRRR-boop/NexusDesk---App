@@ -114,3 +114,17 @@ SPACING = Spacing()
 RADIUS = Radius()
 TYPOGRAPHY = Typography()
 MOTION = Motion()
+
+# Couleurs par catégorie DiskPilot (section 11), stables entre les deux thèmes pour rester
+# reconnaissables (treemap, répartition). Clés en chaîne brute plutôt qu'en important le
+# type Category de models/ : ui/theme/ reste une fondation sans dépendance vers le haut.
+CATEGORY_COLORS: dict[str, str] = {
+    "videos": "#F472B6",
+    "images": "#22D3EE",
+    "audio": "#A78BFA",
+    "documents": "#60A5FA",
+    "archives": "#FBBF24",
+    "installers": "#F87171",
+    "code": "#34D399",
+    "other": "#9CA3AF",
+}

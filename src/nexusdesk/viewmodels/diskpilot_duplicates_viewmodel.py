@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtCore import QObject, Signal
 
 from nexusdesk.core.tasks import CancellationToken, ProgressReporter, TaskManager
@@ -13,6 +15,7 @@ from nexusdesk.repositories.diskpilot_hash_cache_repository import (
     DiskPilotHashCacheRepository,
 )
 from nexusdesk.services.diskpilot.duplicate_finder import find_duplicates
+from nexusdesk.services.diskpilot.export_service import export_duplicates_csv
 
 _TASK_KEY = "diskpilot:duplicates"
 
@@ -54,3 +57,7 @@ class DuplicatesViewModel(QObject):
         if self._scan_id is not None:
             self._duplicate_repository.save_duplicate_groups(self._scan_id, groups)
         self.groups_ready.emit(groups)
+
+    def export_csv(self, destination: Path) -> None:
+        if self.last_groups:
+            export_duplicates_csv(self.last_groups, destination)
