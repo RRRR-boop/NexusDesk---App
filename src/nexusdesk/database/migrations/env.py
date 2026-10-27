@@ -10,6 +10,15 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from nexusdesk.models.base import Base
+from nexusdesk.models.diskpilot import (  # noqa: F401 - enregistre les tables dans Base.metadata
+    DiskDuplicateFile,
+    DiskDuplicateGroup,
+    DiskFolderSnapshot,
+    DiskLargestFile,
+    DiskLinkEntry,
+    DiskScan,
+    DiskSkippedEntry,
+)
 from nexusdesk.models.settings import SettingRow  # noqa: F401 - enregistre la table dans Base.metadata
 
 config = context.config

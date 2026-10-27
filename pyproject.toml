@@ -13,6 +13,7 @@ dependencies = [
     "pydantic>=2.6,<3",
     "pydantic-settings>=2.2,<3",
     "pywin32>=306; sys_platform == 'win32'",
+    "psutil>=5.9,<7",
 ]
 
 [dependency-groups]
@@ -29,6 +30,7 @@ dev = [
     "pip-audit>=2.7,<3",
     "pip-licenses>=4.4,<5",
     "types-pywin32>=306; sys_platform == 'win32'",
+    "types-psutil>=5.9,<8",
 ]
 
 [build-system]
