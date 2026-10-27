@@ -118,3 +118,15 @@ class ComparisonResult:
     removed: list[Path]
     grown: list[tuple[Path, int, int]]
     size_delta: int
+
+
+def flatten_folder_tree(root: FolderNode) -> list[FolderNode]:
+    """Aplatit l'arbre en une liste (pile explicite) — utilisé à la fois par le dépôt
+    (persistance ≤4 niveaux) et par les viewmodels (export CSV, navigation)."""
+    flat: list[FolderNode] = []
+    stack: list[FolderNode] = [root]
+    while stack:
+        node = stack.pop()
+        flat.append(node)
+        stack.extend(node.children)
+    return flat

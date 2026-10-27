@@ -21,7 +21,12 @@ from nexusdesk.models.diskpilot import (
     DiskScan,
     DiskSkippedEntry,
 )
-from nexusdesk.models.diskpilot_domain import Category, FolderNode, ScanOptions, ScanResult
+from nexusdesk.models.diskpilot_domain import (
+    Category,
+    ScanOptions,
+    ScanResult,
+    flatten_folder_tree,
+)
 
 _MAX_PERSISTED_DEPTH = 4
 _BATCH_SIZE = 500
@@ -35,16 +40,6 @@ def _batched[T](items: list[T], size: int) -> Iterator[list[T]]:
 
 def _normalize_root(root: Path) -> str:
     return str(root.resolve()).lower()
-
-
-def _flatten_folders(root: FolderNode) -> list[FolderNode]:
-    flat: list[FolderNode] = []
-    stack: list[FolderNode] = [root]
-    while stack:
-        node = stack.pop()
-        flat.append(node)
-        stack.extend(node.children)
-    return flat
 
 
 def _dump_category_sizes(sizes: dict[Category, int]) -> str:
@@ -103,7 +98,7 @@ class DiskPilotScanRepository:
 
             persisted_folders = [
                 folder
-                for folder in _flatten_folders(result.root)
+                for folder in flatten_folder_tree(result.root)
                 if folder.depth <= _MAX_PERSISTED_DEPTH
             ]
             for batch in _batched(persisted_folders, _BATCH_SIZE):

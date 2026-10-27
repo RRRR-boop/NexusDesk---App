@@ -35,6 +35,16 @@ class AppearanceSettings(BaseModel):
     animations_enabled: bool = True
 
 
+class DiskPilotSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    extra_excluded_paths: list[str] = []
+    min_duplicate_size_bytes: int = 1_048_576  # 1 Mo (section 11)
+    permanent_delete_enabled: bool = False  # jamais câblé en lot 1, décoché par défaut
+    warning_free_percent: float = 15.0
+    alert_free_percent: float = 5.0
+
+
 class AppSettings(BaseModel):
     # "ignore" (pas "forbid") : la table clé/valeur (ADR-0003) peut contenir des clés hors
     # du schéma déclaré (état d'interface comme le repli de la barre latérale, réglages des
@@ -43,3 +53,4 @@ class AppSettings(BaseModel):
 
     general: GeneralSettings = GeneralSettings()
     appearance: AppearanceSettings = AppearanceSettings()
+    diskpilot: DiskPilotSettings = DiskPilotSettings()
