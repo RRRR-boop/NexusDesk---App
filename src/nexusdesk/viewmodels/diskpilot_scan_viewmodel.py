@@ -40,8 +40,17 @@ class ScanViewModel(QObject):
         self.last_result: ScanResult | None = None
         self._last_options: ScanOptions | None = None
 
-    def start_scan(self, root: Path, min_duplicate_size: int = 1_048_576) -> None:
-        options = ScanOptions(root=root, min_duplicate_size=min_duplicate_size)
+    def start_scan(
+        self,
+        root: Path,
+        min_duplicate_size: int = 1_048_576,
+        extra_excluded_paths: tuple[Path, ...] = (),
+    ) -> None:
+        options = ScanOptions(
+            root=root,
+            min_duplicate_size=min_duplicate_size,
+            extra_excluded_paths=extra_excluded_paths,
+        )
         self._last_options = options
         task = build_scan_task(options, self._get_size_on_disk, self._get_hardlink_key)
 

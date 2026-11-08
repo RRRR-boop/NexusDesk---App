@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import sys
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from nexusdesk.app import Application
@@ -25,7 +24,7 @@ def main() -> int:
         send_command(OPEN_MAIN_WINDOW)
         return 0
 
-    QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+    # Qt 6 active toujours les pixmaps haute résolution (AA_UseHighDpiPixmaps est obsolète).
     qt_app = QApplication(sys.argv)
     qt_app.setQuitOnLastWindowClosed(False)
 

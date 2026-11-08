@@ -78,7 +78,7 @@ class DiskSkippedEntry(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     scan_id: Mapped[int] = mapped_column(ForeignKey("diskpilot_scan.id", ondelete="CASCADE"))
     path: Mapped[str]
-    kind: Mapped[str]  # excluded_default|excluded_system_file|inaccessible
+    kind: Mapped[str]  # excluded_default|excluded_user|excluded_system_file|inaccessible
     reason: Mapped[str]  # access_denied|path_too_long|locked|excluded_path
 
 

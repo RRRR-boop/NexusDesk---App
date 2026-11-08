@@ -186,10 +186,49 @@ def test_excluded_folder_is_skipped_and_never_descended_into(
     excluded_folder.mkdir()
     (excluded_folder / "deleted.txt").write_bytes(b"jamais compte")
 
-    monkeypatch.setattr(scanner_module, "build_excluded_paths", lambda _root: {excluded_folder})
+    monkeypatch.setattr(
+        scanner_module, "build_scan_exclusions", lambda _root, _extra: {excluded_folder}
+    )
 
     result = _run_scan(root)
 
     assert result.file_count == 1
     assert result.excluded_count == 1
     assert result.inaccessible_count == 0
+
+
+def test_user_excluded_folder_is_skipped_and_reported_as_user_exclusion(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    (root / "keep").mkdir(parents=True)
+    (root / "skip").mkdir()
+    (root / "keep" / "a.bin").write_bytes(b"a" * 10)
+    (root / "skip" / "b.bin").write_bytes(b"b" * 10)
+
+    options = ScanOptions(root=root, extra_excluded_paths=(root / "skip",))
+    result = build_scan_task(options, get_size_on_disk, get_hardlink_key)(
+        CancellationToken(), _NullReporter()
+    )
+
+    assert isinstance(result, ScanResult)
+    assert result.file_count == 1
+    assert [(entry.path, entry.kind) for entry in result.skipped] == [
+        (root / "skip", "excluded_user")
+    ]
+
+
+def test_scanning_a_user_excluded_folder_explicitly_still_lists_its_content(
+    tmp_path: Path,
+) -> None:
+    # Section 11 : un dossier exclu peut être analysé explicitement (en lecture seule).
+    root = tmp_path / "excluded"
+    root.mkdir()
+    (root / "c.bin").write_bytes(b"c" * 10)
+
+    options = ScanOptions(root=root, extra_excluded_paths=(root,))
+    result = build_scan_task(options, get_size_on_disk, get_hardlink_key)(
+        CancellationToken(), _NullReporter()
+    )
+
+    assert isinstance(result, ScanResult)
+    assert result.file_count == 1
+    assert result.excluded_count == 0

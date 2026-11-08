@@ -6,6 +6,7 @@ import pytest
 
 from nexusdesk.services.diskpilot.exclusions import (
     build_excluded_paths,
+    build_scan_exclusions,
     is_excluded,
     is_system_file,
 )
@@ -52,3 +53,18 @@ def test_non_system_drive_does_not_add_windows_and_program_files(
 
     assert Path(tmp_path.drive + "\\Windows") not in excluded
     assert Path(tmp_path.drive + "\\$Recycle.Bin") in excluded
+
+
+def test_scan_exclusions_drop_the_root_and_its_ancestors_but_keep_siblings(tmp_path: Path) -> None:
+    recycle_bin = Path(tmp_path.drive + "\\$Recycle.Bin")
+    scan_root = recycle_bin / "S-1-5-21"
+    user_excluded = Path(tmp_path.drive + "\\Archives")
+
+    scan_exclusions = build_scan_exclusions(scan_root, [user_excluded, scan_root])
+
+    assert recycle_bin not in scan_exclusions  # ancêtre de la racine : sinon scan vide
+    assert scan_root not in scan_exclusions
+    assert user_excluded in scan_exclusions
+    assert Path(tmp_path.drive + "\\System Volume Information") in scan_exclusions
+    # La suppression garde la protection complète (build_excluded_paths inchangé).
+    assert is_excluded(scan_root / "file.bin", build_excluded_paths(scan_root), scan_root)

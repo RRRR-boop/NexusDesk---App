@@ -34,7 +34,7 @@ from nexusdesk.models.diskpilot_domain import (
 )
 from nexusdesk.services.diskpilot.categorizer import categorize
 from nexusdesk.services.diskpilot.exclusions import (
-    build_excluded_paths,
+    build_scan_exclusions,
     is_excluded,
     is_system_file,
 )
@@ -193,7 +193,8 @@ def build_scan_task(
     def _task(token: CancellationToken, reporter: ProgressReporter) -> object:
         started_at = datetime.now()
         accumulator = _ScanAccumulator(options)
-        excluded_paths = build_excluded_paths(options.root)
+        excluded_paths = build_scan_exclusions(options.root, options.extra_excluded_paths)
+        user_excluded_paths = set(options.extra_excluded_paths)
 
         stack: list[tuple[Path, int]] = [(options.root, 0)]
         processed = 0
@@ -219,7 +220,14 @@ def build_scan_task(
                     processed += 1
 
                     if is_excluded(entry_path, excluded_paths, options.root):
-                        accumulator.add_skipped(entry_path, "excluded_default", "excluded_path")
+                        # Le parcours ne descend jamais dans un dossier exclu : une entrée
+                        # exclue est donc toujours le dossier exclu lui-même.
+                        kind: SkippedKind = (
+                            "excluded_user"
+                            if entry_path in user_excluded_paths
+                            else "excluded_default"
+                        )
+                        accumulator.add_skipped(entry_path, kind, "excluded_path")
                         continue
 
                     try:

@@ -5,19 +5,24 @@ Chaque changement est appliqué immédiatement (pas de bouton Enregistrer), conf
 défaut » est présent sur la page comme l'exige la section 15.
 
 L'onglet DiskPilot n'expose que les réglages réellement câblés (taille minimale des
-doublons, seuils d'alerte d'espace libre) : la suppression définitive n'est pas
+doublons, seuils d'alerte d'espace libre, dossiers exclus) : la suppression définitive n'est pas
 implémentée, elle n'a donc aucun contrôle (principe « aucun bouton factice »).
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
+    QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QLabel,
+    QListWidget,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -160,7 +165,26 @@ class SettingsPage(QWidget):
         self._alert_free_spin.valueChanged.connect(self._on_field_changed)
         form.addRow("Alerte sous (espace libre) :", self._alert_free_spin)
 
+        self._exclusions_list = QListWidget()
+        self._exclusions_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self._exclusions_list.setMaximumHeight(140)
+        self._exclusions_list.itemSelectionChanged.connect(self._on_exclusion_selection_changed)
+        add_exclusion_button = QPushButton("Ajouter un dossier…")
+        add_exclusion_button.clicked.connect(self._on_add_exclusion_clicked)
+        self._remove_exclusion_button = QPushButton("Retirer")
+        self._remove_exclusion_button.setEnabled(False)
+        self._remove_exclusion_button.clicked.connect(self._on_remove_exclusion_clicked)
+        exclusion_buttons = QHBoxLayout()
+        exclusion_buttons.addWidget(add_exclusion_button)
+        exclusion_buttons.addWidget(self._remove_exclusion_button)
+        exclusion_buttons.addStretch(1)
+        exclusions_box = QVBoxLayout()
+        exclusions_box.addWidget(self._exclusions_list)
+        exclusions_box.addLayout(exclusion_buttons)
+        form.addRow("Dossiers exclus des analyses :", exclusions_box)
+
         note = QLabel(
+            "Les exclusions système (Windows, Program Files, Corbeille…) s'appliquent toujours. "
             "Les fichiers supprimés depuis DiskPilot sont toujours envoyés à la Corbeille : "
             "la suppression définitive n'est pas disponible."
         )
@@ -196,6 +220,8 @@ class SettingsPage(QWidget):
             )
             self._warning_free_spin.setValue(diskpilot.warning_free_percent)
             self._alert_free_spin.setValue(diskpilot.alert_free_percent)
+            self._exclusions_list.clear()
+            self._exclusions_list.addItems(diskpilot.extra_excluded_paths)
         finally:
             self._loading = False
 
@@ -233,6 +259,7 @@ class SettingsPage(QWidget):
                 ),
                 "warning_free_percent": self._warning_free_spin.value(),
                 "alert_free_percent": self._alert_free_spin.value(),
+                "extra_excluded_paths": self._current_exclusions(),
             }
         )
         self._viewmodel.save(
@@ -240,6 +267,35 @@ class SettingsPage(QWidget):
                 update={"general": general, "appearance": appearance, "diskpilot": diskpilot}
             )
         )
+
+    def _current_exclusions(self) -> list[str]:
+        return [
+            self._exclusions_list.item(row).text() for row in range(self._exclusions_list.count())
+        ]
+
+    def add_exclusion(self, directory: str) -> None:
+        """Ajoute un dossier absolu (normalisé, sans doublon insensible à la casse)."""
+        path = Path(directory)
+        if not path.is_absolute():
+            return
+        normalized = str(path)
+        if any(Path(existing) == path for existing in self._current_exclusions()):
+            return
+        self._exclusions_list.addItem(normalized)
+        self._on_field_changed()
+
+    def _on_add_exclusion_clicked(self) -> None:
+        directory = QFileDialog.getExistingDirectory(self, "Choisir un dossier à exclure")
+        if directory:
+            self.add_exclusion(directory)
+
+    def _on_remove_exclusion_clicked(self) -> None:
+        for item in self._exclusions_list.selectedItems():
+            self._exclusions_list.takeItem(self._exclusions_list.row(item))
+        self._on_field_changed()
+
+    def _on_exclusion_selection_changed(self) -> None:
+        self._remove_exclusion_button.setEnabled(bool(self._exclusions_list.selectedItems()))
 
     def _on_reset_clicked(self) -> None:
         self._viewmodel.reset_to_defaults()

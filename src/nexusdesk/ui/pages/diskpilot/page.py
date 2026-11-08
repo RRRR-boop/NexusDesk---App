@@ -3,6 +3,8 @@ Doublons / Nettoyage / Historique, assemblés autour du conteneur de viewmodels 
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
 from nexusdesk.config.schema import DiskPilotSettings
@@ -30,9 +32,11 @@ class DiskPilotPage(QWidget):
         self._viewmodel = viewmodel
         self._free_space_thresholds = (settings.warning_free_percent, settings.alert_free_percent)
         default_min_duplicate_size = settings.min_duplicate_size_bytes
+        extra_excluded_paths = tuple(Path(path) for path in settings.extra_excluded_paths)
 
         self._volumes_panel = VolumesPanel(viewmodel.volumes)
         self._scan_panel = ScanPanel(viewmodel.scan, default_min_duplicate_size)
+        self._scan_panel.set_extra_excluded_paths(extra_excluded_paths)
         self._largest_files_panel = LargestFilesPanel(viewmodel.deletion, reveal_in_explorer)
         self._duplicates_panel = DuplicatesPanel(
             viewmodel.duplicates,
@@ -67,6 +71,9 @@ class DiskPilotPage(QWidget):
     def apply_settings(self, settings: DiskPilotSettings) -> None:
         """Applique les réglages DiskPilot sans redémarrage (section 15)."""
         self._scan_panel.set_min_duplicate_size(settings.min_duplicate_size_bytes)
+        self._scan_panel.set_extra_excluded_paths(
+            tuple(Path(path) for path in settings.extra_excluded_paths)
+        )
         self._duplicates_panel.set_min_duplicate_size(settings.min_duplicate_size_bytes)
         thresholds = (settings.warning_free_percent, settings.alert_free_percent)
         if thresholds != self._free_space_thresholds:

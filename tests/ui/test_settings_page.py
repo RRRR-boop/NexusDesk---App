@@ -66,3 +66,18 @@ def test_alert_threshold_is_kept_strictly_below_warning_threshold(qtbot: Any) ->
     assert page._alert_free_spin.value() == 14.0
     assert repository.stored["diskpilot.alert_free_percent"] == 14.0
     assert repository.stored["diskpilot.warning_free_percent"] == 15.0
+
+
+def test_exclusions_editor_saves_normalized_paths_without_duplicates(qtbot: Any) -> None:
+    page, repository = _build_page(qtbot, AppSettings())
+
+    page.add_exclusion("D:/Archives/Photos")
+    page.add_exclusion(r"d:\archives\photos")  # même dossier, casse différente
+    page.add_exclusion(r"relatif\dossier")  # refusé : chemin non absolu
+
+    assert repository.stored["diskpilot.extra_excluded_paths"] == [r"D:\Archives\Photos"]
+
+    page._exclusions_list.item(0).setSelected(True)
+    page._remove_exclusion_button.click()
+
+    assert repository.stored["diskpilot.extra_excluded_paths"] == []

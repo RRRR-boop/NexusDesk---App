@@ -37,6 +37,7 @@ class ScanPanel(QWidget):
         super().__init__(parent)
         self._viewmodel = viewmodel
         self._min_duplicate_size = default_min_duplicate_size
+        self._extra_excluded_paths: tuple[Path, ...] = ()
         self._theme: ThemeName = "dark"
         self._breadcrumb: list[FolderNode] = []
 
@@ -112,6 +113,10 @@ class ScanPanel(QWidget):
         """Pris en compte au prochain scan (réglage modifiable sans redémarrage)."""
         self._min_duplicate_size = size_bytes
 
+    def set_extra_excluded_paths(self, paths: tuple[Path, ...]) -> None:
+        """Exclusions personnalisées, prises en compte au prochain scan."""
+        self._extra_excluded_paths = paths
+
     def set_theme(self, theme: ThemeName) -> None:
         self._theme = theme
         if self._breadcrumb:
@@ -129,7 +134,9 @@ class ScanPanel(QWidget):
             return
         self._start_button.setEnabled(False)
         self._cancel_button.setEnabled(True)
-        self._viewmodel.start_scan(Path(root_text), self._min_duplicate_size)
+        self._viewmodel.start_scan(
+            Path(root_text), self._min_duplicate_size, self._extra_excluded_paths
+        )
 
     def _reset_buttons(self) -> None:
         self._start_button.setEnabled(bool(self._root_edit.text()))

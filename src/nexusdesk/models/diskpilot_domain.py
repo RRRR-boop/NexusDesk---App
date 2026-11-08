@@ -11,7 +11,7 @@ Category = Literal[
     "videos", "images", "audio", "documents", "archives", "installers", "code", "other"
 ]
 LinkType = Literal["symlink", "junction"]
-SkippedKind = Literal["excluded_default", "excluded_system_file", "inaccessible"]
+SkippedKind = Literal["excluded_default", "excluded_user", "excluded_system_file", "inaccessible"]
 SkippedReason = Literal["access_denied", "path_too_long", "locked", "excluded_path"]
 ScanStatus = Literal["running", "completed", "cancelled", "failed"]
 CleanupKind = Literal["old_installer", "temp_file", "duplicate", "stale_large_file"]
@@ -21,6 +21,7 @@ CleanupKind = Literal["old_installer", "temp_file", "duplicate", "stale_large_fi
 class ScanOptions:
     root: Path
     min_duplicate_size: int = 1_048_576  # 1 Mo, réglable (section 11)
+    extra_excluded_paths: tuple[Path, ...] = ()  # exclusions personnalisées (section 15)
 
 
 @dataclass
