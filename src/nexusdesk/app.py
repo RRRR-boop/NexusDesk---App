@@ -159,7 +159,7 @@ class Application:
         self.diskpilot_page = DiskPilotPage(
             self.diskpilot_viewmodel,
             diskpilot_filesystem.reveal_in_explorer,
-            self.settings_viewmodel.settings.diskpilot.min_duplicate_size_bytes,
+            self.settings_viewmodel.settings.diskpilot,
         )
         self.main_window.register_page("diskpilot", self.diskpilot_page)
         self.main_window.register_page("clipvault", ClipVaultPage())
@@ -238,6 +238,7 @@ class Application:
         self.theme_manager.apply(settings.appearance)
         self.main_window.set_close_behavior(settings.general.close_behavior)
         set_startup_enabled(settings.general.launch_at_startup)
+        self.diskpilot_page.apply_settings(settings.diskpilot)
 
     def _show_main_window(self) -> None:
         self.main_window.show()

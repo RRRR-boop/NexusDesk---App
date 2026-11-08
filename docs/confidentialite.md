@@ -7,8 +7,8 @@
 - Les journaux techniques (`%LOCALAPPDATA%\NexusDesk\logs\`) ne contiennent jamais le chemin
   complet du profil utilisateur : il est systématiquement remplacé par `%USERPROFILE%`
   avant écriture (`core/logging_setup.py`).
-- Les paramètres stockés (onglets Général et Apparence) ne contiennent aucune donnée
-  personnelle : thème, densité, comportement de la croix, etc.
+- Les paramètres stockés (onglets Général, Apparence et DiskPilot) ne contiennent aucune
+  donnée personnelle : thème, densité, comportement de la croix, seuils DiskPilot, etc.
 - Le tube nommé utilisé pour l'instance unique (ADR-0002) a sa DACL restreinte au SID de
   l'utilisateur courant : aucun autre compte Windows ne peut y lire ou écrire.
 

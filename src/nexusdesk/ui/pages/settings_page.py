@@ -1,9 +1,12 @@
-"""Page Paramètres : onglets Général et Apparence (section 15).
+"""Page Paramètres : onglets Général, Apparence et DiskPilot (section 15).
 
 Chaque changement est appliqué immédiatement (pas de bouton Enregistrer), conformément à
 « appliqués sans redémarrage sauf mention contraire ». Un bouton « Rétablir les valeurs par
-défaut » est présent sur la page comme l'exige la section 15 (un par onglet serait
-prématuré tant qu'il n'y a que deux onglets au lot 0).
+défaut » est présent sur la page comme l'exige la section 15.
+
+L'onglet DiskPilot n'expose que les réglages réellement câblés (taille minimale des
+doublons, seuils d'alerte d'espace libre) : la suppression définitive n'est pas
+implémentée, elle n'a donc aucun contrôle (principe « aucun bouton factice »).
 """
 
 from __future__ import annotations
@@ -11,6 +14,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -20,8 +24,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from nexusdesk.config.schema import AppearanceSettings, AppSettings, GeneralSettings
+from nexusdesk.config.schema import (
+    AppearanceSettings,
+    AppSettings,
+    DiskPilotSettings,
+    GeneralSettings,
+)
 from nexusdesk.viewmodels.settings_viewmodel import SettingsViewModel
+
+_BYTES_PER_MB = 1024 * 1024
 
 _HOME_PAGE_LABELS = {
     "dashboard": "Tableau de bord",
@@ -59,6 +70,7 @@ class SettingsPage(QWidget):
         tabs = QTabWidget()
         tabs.addTab(self._build_general_tab(), "Général")
         tabs.addTab(self._build_appearance_tab(), "Apparence")
+        tabs.addTab(self._build_diskpilot_tab(), "DiskPilot")
 
         reset_button = QPushButton("Rétablir les valeurs par défaut")
         reset_button.clicked.connect(self._on_reset_clicked)
@@ -123,6 +135,40 @@ class SettingsPage(QWidget):
 
         return tab
 
+    def _build_diskpilot_tab(self) -> QWidget:
+        tab = QWidget()
+        form = QFormLayout(tab)
+
+        self._min_duplicate_size_spin = QDoubleSpinBox()
+        self._min_duplicate_size_spin.setRange(0.01, 10_240.0)
+        self._min_duplicate_size_spin.setDecimals(2)
+        self._min_duplicate_size_spin.setSuffix(" Mo")
+        self._min_duplicate_size_spin.valueChanged.connect(self._on_field_changed)
+        form.addRow("Taille minimale des doublons :", self._min_duplicate_size_spin)
+
+        self._warning_free_spin = QDoubleSpinBox()
+        self._warning_free_spin.setRange(1.0, 90.0)
+        self._warning_free_spin.setDecimals(0)
+        self._warning_free_spin.setSuffix(" %")
+        self._warning_free_spin.valueChanged.connect(self._on_field_changed)
+        form.addRow("Avertissement sous (espace libre) :", self._warning_free_spin)
+
+        self._alert_free_spin = QDoubleSpinBox()
+        self._alert_free_spin.setRange(0.0, 89.0)
+        self._alert_free_spin.setDecimals(0)
+        self._alert_free_spin.setSuffix(" %")
+        self._alert_free_spin.valueChanged.connect(self._on_field_changed)
+        form.addRow("Alerte sous (espace libre) :", self._alert_free_spin)
+
+        note = QLabel(
+            "Les fichiers supprimés depuis DiskPilot sont toujours envoyés à la Corbeille : "
+            "la suppression définitive n'est pas disponible."
+        )
+        note.setWordWrap(True)
+        form.addRow(note)
+
+        return tab
+
     def _load_from_settings(self, settings: AppSettings) -> None:
         self._loading = True
         try:
@@ -143,12 +189,27 @@ class SettingsPage(QWidget):
             self._text_size_combo.clear()
             _populate_combo(self._text_size_combo, _TEXT_SIZE_LABELS, settings.appearance.text_size)
             self._animations_checkbox.setChecked(settings.appearance.animations_enabled)
+
+            diskpilot = settings.diskpilot
+            self._min_duplicate_size_spin.setValue(
+                diskpilot.min_duplicate_size_bytes / _BYTES_PER_MB
+            )
+            self._warning_free_spin.setValue(diskpilot.warning_free_percent)
+            self._alert_free_spin.setValue(diskpilot.alert_free_percent)
         finally:
             self._loading = False
 
     def _on_field_changed(self) -> None:
         if self._loading:
             return
+        # Le seuil d'alerte doit rester strictement sous le seuil d'avertissement, sinon
+        # l'état « avertissement » de la jauge DiskPilot deviendrait inatteignable.
+        if self._alert_free_spin.value() >= self._warning_free_spin.value():
+            self._loading = True
+            try:
+                self._alert_free_spin.setValue(self._warning_free_spin.value() - 1)
+            finally:
+                self._loading = False
         general = GeneralSettings(
             launch_at_startup=self._startup_checkbox.isChecked(),
             close_behavior=self._close_behavior_combo.currentData(),
@@ -162,7 +223,23 @@ class SettingsPage(QWidget):
             text_size=self._text_size_combo.currentData(),
             animations_enabled=self._animations_checkbox.isChecked(),
         )
-        self._viewmodel.save(AppSettings(general=general, appearance=appearance))
+        # Partir des réglages DiskPilot courants : les champs sans contrôle d'interface
+        # (exclusions, suppression définitive) ne doivent jamais être remis à leur valeur
+        # par défaut par un changement fait dans un autre onglet.
+        diskpilot: DiskPilotSettings = self._viewmodel.settings.diskpilot.model_copy(
+            update={
+                "min_duplicate_size_bytes": round(
+                    self._min_duplicate_size_spin.value() * _BYTES_PER_MB
+                ),
+                "warning_free_percent": self._warning_free_spin.value(),
+                "alert_free_percent": self._alert_free_spin.value(),
+            }
+        )
+        self._viewmodel.save(
+            self._viewmodel.settings.model_copy(
+                update={"general": general, "appearance": appearance, "diskpilot": diskpilot}
+            )
+        )
 
     def _on_reset_clicked(self) -> None:
         self._viewmodel.reset_to_defaults()

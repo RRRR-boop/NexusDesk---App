@@ -102,6 +102,10 @@ class DuplicatesPanel(QWidget):
         viewmodel.groups_ready.connect(self._on_groups_ready)
         viewmodel.failed.connect(self._on_failed)
 
+    def set_min_duplicate_size(self, size_bytes: int) -> None:
+        """Pris en compte à la prochaine recherche (réglage modifiable sans redémarrage)."""
+        self._min_duplicate_size = size_bytes
+
     def set_scan_data(self, files: list[FileNode], scan_id: int | None, scan_root: Path) -> None:
         self._files = files
         self._scan_id = scan_id

@@ -175,6 +175,7 @@ session pour la même raison — toujours largement au-dessus du débit d'une vr
 - Exposition du réglage `min_duplicate_size_bytes` dans la page Paramètres : la valeur existe
   en base et est lue au démarrage, mais aucun contrôle d'interface ne permet encore à
   l'utilisateur de la modifier (seuls les onglets Général/Apparence existent, section 14).
+  **Fait après coup le 2026-11-08**, voir « Complément post-lot » ci-dessous.
 
 ### Limites découvertes
 
@@ -191,3 +192,20 @@ session pour la même raison — toujours largement au-dessus du débit d'une vr
   variance réel et non négligeable pour un outil qui lit les métadonnées d'1M de fichiers —
   à documenter pour l'utilisateur final (section 16 : suggérer une exclusion Defender pour
   les gros scans, si un jour ce lot revient sur la question des performances).
+
+### Complément post-lot (2026-11-08, reprise sur un nouvel ordinateur)
+
+- **Terminé et vérifié** : onglet « DiskPilot » dans Paramètres (taille minimale des
+  doublons en Mo, seuils d'avertissement et d'alerte d'espace libre), appliqué sans
+  redémarrage (`DiskPilotPage.apply_settings`, branché sur `settings_changed` dans `app.py`).
+  Le seuil d'alerte est maintenu strictement sous le seuil d'avertissement. Tests :
+  `tests/ui/test_settings_page.py`.
+- **Anomalie corrigée** : tout changement dans les onglets Général ou Apparence
+  reconstruisait `AppSettings` sans le sous-modèle DiskPilot, ce qui réécrivait en base les
+  valeurs par défaut de DiskPilot (invisible jusqu'ici faute de contrôle d'interface). La
+  page part désormais des réglages courants (`model_copy`). Test de non-régression :
+  `test_changing_general_tab_keeps_diskpilot_settings_without_ui_controls`.
+- **Volontairement non exposé** : suppression définitive (non câblée, principe « aucun bouton
+  factice ») ; exclusions personnalisées (`extra_excluded_paths` existe dans le schéma mais
+  n'est **pas lu par le scanner** — à câbler avant de l'exposer) ; politique des liens et
+  jonctions (section 15, non modélisée).

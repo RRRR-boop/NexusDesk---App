@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
+from nexusdesk.config.schema import DiskPilotSettings
 from nexusdesk.models.diskpilot_domain import FileNode, ScanResult, flatten_folder_tree
 from nexusdesk.services.diskpilot.ports import RevealInExplorer
 from nexusdesk.ui.pages.diskpilot.cleanup_panel import CleanupPanel
@@ -22,11 +23,13 @@ class DiskPilotPage(QWidget):
         self,
         viewmodel: DiskPilotViewModel,
         reveal_in_explorer: RevealInExplorer,
-        default_min_duplicate_size: int,
+        settings: DiskPilotSettings,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._viewmodel = viewmodel
+        self._free_space_thresholds = (settings.warning_free_percent, settings.alert_free_percent)
+        default_min_duplicate_size = settings.min_duplicate_size_bytes
 
         self._volumes_panel = VolumesPanel(viewmodel.volumes)
         self._scan_panel = ScanPanel(viewmodel.scan, default_min_duplicate_size)
@@ -60,6 +63,17 @@ class DiskPilotPage(QWidget):
         resolved: ThemeName = "light" if theme == "light" else "dark"
         self._volumes_panel.set_theme(resolved)
         self._scan_panel.set_theme(resolved)
+
+    def apply_settings(self, settings: DiskPilotSettings) -> None:
+        """Applique les réglages DiskPilot sans redémarrage (section 15)."""
+        self._scan_panel.set_min_duplicate_size(settings.min_duplicate_size_bytes)
+        self._duplicates_panel.set_min_duplicate_size(settings.min_duplicate_size_bytes)
+        thresholds = (settings.warning_free_percent, settings.alert_free_percent)
+        if thresholds != self._free_space_thresholds:
+            # Les jauges relisent les seuils au rafraîchissement : ne relister les volumes
+            # que si les seuils ont réellement changé.
+            self._free_space_thresholds = thresholds
+            self._volumes_panel.refresh()
 
     def _on_scan_completed(self, result: object) -> None:
         if not isinstance(result, ScanResult):

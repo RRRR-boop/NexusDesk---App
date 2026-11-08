@@ -108,6 +108,10 @@ class ScanPanel(QWidget):
         viewmodel.scan_failed.connect(self._on_scan_failed)
         viewmodel.scan_cancelled.connect(self._on_scan_cancelled)
 
+    def set_min_duplicate_size(self, size_bytes: int) -> None:
+        """Pris en compte au prochain scan (réglage modifiable sans redémarrage)."""
+        self._min_duplicate_size = size_bytes
+
     def set_theme(self, theme: ThemeName) -> None:
         self._theme = theme
         if self._breadcrumb:
