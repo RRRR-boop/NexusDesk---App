@@ -13,6 +13,31 @@
 
 ---
 
+## Mise à jour du 2026-11-08 (2) — préversion 0.2.1-beta.1 publiée
+
+> Prime sur tout le reste du document.
+
+- **Version** : `0.2.1b1` (PEP 440) / tag `v0.2.1-beta.1`. Le nom `v0.2.0-beta.1` demandé
+  aurait été *antérieur* à la `0.2.0` déjà déclarée dans `pyproject.toml` : numéro supérieur
+  retenu, conformément à la consigne « sauf si le dépôt comporte déjà […] un numéro plus
+  récent ».
+- **Ajouté** : exclusions personnalisées DiskPilot (câblées au scan + éditeur dans
+  Paramètres) ; distribution (`scripts/package-release.ps1`, `installer/nexusdesk.iss`,
+  `CHANGELOG.md`, README utilisateur). Artefacts produits dans `release\<version>\` (ignoré
+  par Git) : ZIP portable, installateur par utilisateur, `VERSION.txt`, `SHA256SUMS.txt`.
+- **Corrigé** : scan explicite d'un dossier exclu (résultat vide) ; dépréciation Qt
+  `AA_UseHighDpiPixmaps`. La suppression reste refusée sous les dossiers protégés.
+- **Vérifié** : `check.ps1` vert ; 105 tests réussis + 1 ignoré, couverture 61 % ;
+  `smoke-test.ps1` vert ; test UI Automation de l'exe sans Python dans le PATH (volumes,
+  scan, doublons, arrêt propre). Mesure réelle : 369 112 fichiers en 66–114 s, ~1,1 Ko de
+  mémoire par entrée (détail : `docs/journal-des-lots.md`, « Préversion 0.2.1-beta.1 »).
+- **Outils installés sur ce PC** (winget, portée utilisateur) : GitHub CLI 2.103.3,
+  Inno Setup 6.7.3 (`%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe`).
+- **Publier une version** : `build.ps1` → `smoke-test.ps1` → `package-release.ps1` → tag
+  annoté → `gh release create … --prerelease` avec les fichiers de `release\<version>\`.
+- **Prochaines étapes** : décision sur la performance du lot 1, fusion vers `main` (non
+  faite, volontairement), puis lot 2 NetWatch.
+
 ## Mise à jour du 2026-11-08 — reprise effective sur le nouvel ordinateur
 
 > Cette section prime sur le reste du document quand ils divergent.

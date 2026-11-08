@@ -206,6 +206,29 @@ session pour la même raison — toujours largement au-dessus du débit d'une vr
   page part désormais des réglages courants (`model_copy`). Test de non-régression :
   `test_changing_general_tab_keeps_diskpilot_settings_without_ui_controls`.
 - **Volontairement non exposé** : suppression définitive (non câblée, principe « aucun bouton
-  factice ») ; exclusions personnalisées (`extra_excluded_paths` existe dans le schéma mais
-  n'est **pas lu par le scanner** — à câbler avant de l'exposer) ; politique des liens et
-  jonctions (section 15, non modélisée).
+  factice ») ; politique des liens et jonctions (section 15, non modélisée).
+
+### Préversion 0.2.1-beta.1 (2026-11-08)
+
+- **Terminé et vérifié** : exclusions personnalisées câblées dans le scan
+  (`exclusions.build_scan_exclusions`, `ScanOptions.extra_excluded_paths`) et éditables dans
+  Paramètres → DiskPilot ; entrées ignorées marquées `excluded_user`. Tests : 2 cas réels de
+  scan (`test_scanner.py`), 1 test pur (`test_exclusions.py`), 1 test d'interface.
+- **Anomalie corrigée** : analyser explicitement un dossier exclu (ex. `C:\Program Files`)
+  renvoyait un scan vide, chaque entrée ayant la racine exclue pour ancêtre (contraire à la
+  section 11). La racine et ses ancêtres sont désormais retirés des exclusions **du scan
+  seulement** ; `deletion_service` continue d'utiliser `build_excluded_paths` : un fichier sous
+  un dossier protégé reste insupprimable (lecture seule).
+- **Mesure réelle** (`C:\Program Files`, 369 112 fichiers, 40 602 dossiers, NVMe, Defender
+  actif) : 113,9 s à froid (3 241 fichiers/s), 65,8 s à chaud (5 610 fichiers/s) ; surcoût
+  mémoire de pointe 456 Mo (~1,17 Ko par entrée), soit ~1,1 Go estimé pour 1M de fichiers.
+  Essai `dataclass(slots=True)` sur `FileNode`/`FolderNode` : -3 % seulement (les `Path` et
+  `datetime` dominent) — **annulé**, gain trop faible pour modifier le modèle. Réduire la
+  mémoire demanderait de ne plus garder un `Path` par fichier : non fait, documenté.
+- **Exécutable vérifié réellement** (`dist\NexusDesk\NexusDesk.exe`, 135,8 Mo) :
+  `smoke-test.ps1` vert ; test UI Automation lancé avec un PATH sans Python : fenêtre ouverte,
+  volumes détectés, dossier choisi via le vrai dialogue Windows, scan terminé (3 fichiers),
+  doublons trouvés (1 groupe, 2,0 Mo récupérables), 167 Mo de mémoire, arrêt propre (code 0).
+- **Non vérifié manuellement** : suppression vers la Corbeille déclenchée depuis l'exécutable
+  (couverte par `tests/integration/windows/test_recycle_bin.py` sur les sources), installation
+  sur une machine vierge distincte.

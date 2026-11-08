@@ -7,6 +7,7 @@ __pycache__/
 # Build / packaging
 dist/
 build/
+release/
 *.spec.bak
 
 # Bases de données locales (jamais commitées : données utilisateur)
