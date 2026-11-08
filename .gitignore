@@ -35,3 +35,6 @@ reports/
 
 # Configuration locale Claude Code (propre à la machine)
 .claude/settings.local.json
+
+# Configuration générée par l'outil d'agent Serena (propre à la machine, hors projet)
+.serena/
