@@ -3,13 +3,29 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Le détail honnête
 de chaque lot (fait, vérifié, non vérifié, limites) est dans `docs/journal-des-lots.md`.
 
-## [Non publié]
+## [0.2.1-beta.2] — 2026-11-08 — Préversion
+
+Aucune modification fonctionnelle par rapport à 0.2.1-beta.1 : cette version intègre
+correctement la licence.
 
 ### Modifié
 
-- Licence : NexusDesk est désormais distribué sous **GPL v3** (`GPL-3.0-only`, fichier
+- Licence : NexusDesk est désormais distribué sous **GNU GPL v3** (`GPL-3.0-only`, fichier
   `LICENSE`) au lieu d'une licence propriétaire. La préversion 0.2.1-beta.1 a été publiée
-  alors que les métadonnées indiquaient encore « Proprietary ».
+  alors que ses métadonnées indiquaient encore « Proprietary ».
+- Noms des fichiers de distribution : `NexusDesk-v<version>-Setup.exe` et
+  `NexusDesk-v<version>-portable.zip`.
+
+### Ajouté
+
+- Texte intégral de la GNU GPL v3 (`LICENSE`) dans l'installateur (page « Contrat de
+  licence » et dossier d'installation) et dans l'archive portable.
+- `THIRD-PARTY-LICENSES.txt` : avis et textes de licence de l'interpréteur Python et de chaque
+  composant tiers embarqué (PySide6/Qt sous LGPL v3, SQLAlchemy, Alembic, pydantic, psutil,
+  pywin32…), avec le lien vers le code source correspondant.
+- Métadonnées Windows de `NexusDesk.exe` et de l'installateur (Propriétés → Détails) : nom,
+  version, éditeur, licence.
+- `SHA256SUMS.txt` aux fins de ligne LF, vérifiable aussi par `sha256sum -c`.
 
 ## [0.2.1-beta.1] — 2026-11-08 — Préversion
 

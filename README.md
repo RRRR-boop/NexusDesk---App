@@ -4,7 +4,7 @@ Boîte à outils Windows locale, gratuite et sans télémétrie : aucun compte, 
 aucune donnée envoyée. Le projet est livré par lots ; cette préversion contient le **socle** et
 le module **DiskPilot** (analyse de l'espace disque).
 
-> **Préversion 0.2.1-beta.1.** Les modules AppManager, NetWatch, ScreenText, LogDoctor,
+> **Préversion 0.2.1-beta.2.** Les modules AppManager, NetWatch, ScreenText, LogDoctor,
 > ClipVault et le tableau de bord ne sont pas encore développés : leur page l'indique
 > clairement et ne propose aucune fonction.
 
@@ -15,18 +15,18 @@ Configuration requise : Windows 10 ou 11, 64 bits. **Python n'est pas nécessair
 Téléchargez les fichiers depuis la page
 [Releases](https://github.com/RRRR-boop/NexusDesk---App/releases) :
 
-- **Installateur** `NexusDesk-<version>-win64-setup.exe` : installation pour l'utilisateur
+- **Installateur** `NexusDesk-v<version>-Setup.exe` : installation pour l'utilisateur
   courant, sans droits administrateur, dans `%LOCALAPPDATA%\Programs\NexusDesk`, avec un
   raccourci dans le menu Démarrer. La désinstallation (Paramètres Windows → Applications)
   conserve vos données.
-- **Archive portable** `NexusDesk-<version>-win64-portable.zip` : décompressez-la où vous
+- **Archive portable** `NexusDesk-v<version>-portable.zip` : décompressez-la où vous
   voulez puis lancez `NexusDesk.exe`. Grâce au fichier `portable.flag`, toutes les données
   restent dans le dossier de l'application.
 
 Vérifiez l'intégrité des fichiers avec `SHA256SUMS.txt` :
 
 ```powershell
-Get-FileHash .\NexusDesk-<version>-win64-setup.exe -Algorithm SHA256
+Get-FileHash .\NexusDesk-v<version>-Setup.exe -Algorithm SHA256
 ```
 
 L'exécutable n'est pas signé : Windows SmartScreen peut afficher « Windows a protégé votre
@@ -100,5 +100,9 @@ NexusDesk est un logiciel libre distribué sous licence **GNU General Public Lic
 modifier et le redistribuer selon les termes de cette licence ; toute version redistribuée,
 modifiée ou non, doit rester sous GPL v3 avec son code source.
 
-Les licences des composants tiers sont listées dans `docs/licences-tierces.md` ; toutes celles
-des composants embarqués dans l'exécutable sont compatibles avec la GPL v3 (PySide6 : LGPL v3).
+Chaque distribution contient `LICENSE` (texte intégral de la GPL v3) et
+`THIRD-PARTY-LICENSES.txt` (avis et textes de licence des composants embarqués). Toutes ces
+licences sont compatibles avec la GPL v3 ; Qt/PySide6 est utilisé sous LGPL v3, ses
+bibliothèques restant des fichiers séparés et remplaçables. Le code source correspondant à
+chaque version publiée est disponible sur ce dépôt, au tag `v<version>`. L'inventaire des
+licences de toutes les dépendances (développement compris) est dans `docs/licences-tierces.md`.

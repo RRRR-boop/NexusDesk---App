@@ -1,5 +1,6 @@
 ; Installateur Inno Setup de NexusDesk (section 18 du cahier des charges).
-; Compilé par scripts/package-release.ps1, qui fournit AppVersion, SourceDir et OutputDir.
+; Compilé par scripts/package-release.ps1, qui fournit AppVersion, NumericVersion, SourceDir
+; (application + LICENSE + avis de licences tierces), LicenseFilePath et OutputDir.
 ;
 ; Installation par utilisateur, sans droits administrateur (principe du moindre privilège) :
 ; dossier %LOCALAPPDATA%\Programs\NexusDesk. Les données de l'application
@@ -15,6 +16,12 @@
 #ifndef OutputDir
   #define OutputDir "."
 #endif
+#ifndef NumericVersion
+  #define NumericVersion "0.0.0.0"
+#endif
+#ifndef LicenseFilePath
+  #error "LicenseFilePath doit être fourni (/DLicenseFilePath=...)"
+#endif
 
 [Setup]
 AppId={{6F3C2B1E-8D4A-4E5B-9C7F-2A1D0E9B8C64}
@@ -22,6 +29,19 @@ AppName=NexusDesk
 AppVersion={#AppVersion}
 AppVerName=NexusDesk {#AppVersion}
 AppPublisher=NexusDesk
+AppPublisherURL=https://github.com/RRRR-boop/NexusDesk---App
+AppSupportURL=https://github.com/RRRR-boop/NexusDesk---App/issues
+AppUpdatesURL=https://github.com/RRRR-boop/NexusDesk---App/releases
+AppCopyright=Licence GNU GPL v3 (GPL-3.0-only)
+; Page « Contrat de licence » : texte intégral de la GNU GPL v3.
+LicenseFile={#LicenseFilePath}
+VersionInfoVersion={#NumericVersion}
+VersionInfoProductName=NexusDesk
+VersionInfoProductTextVersion={#AppVersion}
+VersionInfoTextVersion={#AppVersion}
+VersionInfoCompany=NexusDesk
+VersionInfoDescription=Installateur de NexusDesk {#AppVersion}
+VersionInfoCopyright=Licence GNU GPL v3 (GPL-3.0-only)
 DefaultDirName={localappdata}\Programs\NexusDesk
 DefaultGroupName=NexusDesk
 DisableProgramGroupPage=yes
@@ -30,7 +50,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir={#OutputDir}
-OutputBaseFilename=NexusDesk-{#AppVersion}-win64-setup
+OutputBaseFilename=NexusDesk-v{#AppVersion}-Setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
