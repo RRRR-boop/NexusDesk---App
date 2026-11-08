@@ -35,8 +35,13 @@
   Inno Setup 6.7.3 (`%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe`).
 - **Publier une version** : `build.ps1` → `smoke-test.ps1` → `package-release.ps1` → tag
   annoté → `gh release create … --prerelease` avec les fichiers de `release\<version>\`.
-- **Prochaines étapes** : décision sur la performance du lot 1, fusion vers `main` (non
-  faite, volontairement), puis lot 2 NetWatch.
+- **Branche unique (2026-11-08)** : à la demande de l'utilisateur, `lot-1-diskpilot` a été
+  fusionnée dans `main` (commit `0e1a642`, avec le fichier `LICENSE` GPL v3 ajouté sur
+  GitHub) ; `lot-0-socle` et `lot-1-diskpilot` ont été supprimées (local et GitHub), tous
+  leurs commits étant dans `main`. **Développer désormais directement sur `main`.**
+- **Incohérence de licence à trancher** : `LICENSE` = GPL v3 (ajouté par l'utilisateur), mais
+  `pyproject.toml`, `README.md` et `docs/licences-tierces.md` indiquent « Proprietary ».
+- **Prochaines étapes** : licence, décision sur la performance du lot 1, puis lot 2 NetWatch.
 
 ## Mise à jour du 2026-11-08 — reprise effective sur le nouvel ordinateur
 
