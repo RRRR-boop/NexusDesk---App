@@ -73,7 +73,22 @@ try {
     Copy-Item "README.md", "CHANGELOG.md" -Destination $portableDir
     Copy-Item (Join-Path $releaseDir "VERSION.txt") -Destination $portableDir
     $zipPath = Join-Path $releaseDir "$portableName.zip"
-    Compress-Archive -Path $portableDir -DestinationPath $zipPath -CompressionLevel Optimal
+    # ZipFile plutot que Compress-Archive : ce dernier echoue si l'antivirus verrouille un
+    # instant un fichier fraichement copie ; quelques nouvelles tentatives suffisent.
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        try {
+            [System.IO.Compression.ZipFile]::CreateFromDirectory(
+                $portableDir, $zipPath, [System.IO.Compression.CompressionLevel]::Optimal, $true)
+            break
+        }
+        catch [System.IO.IOException] {
+            if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+            if ($attempt -eq 5) { throw }
+            Write-Warning "Fichier verrouille, nouvelle tentative ($attempt/5) : $($_.Exception.Message)"
+            Start-Sleep -Seconds 3
+        }
+    }
     Remove-Item -Recurse -Force $stagingRoot   # copie temporaire creee par ce script
 
     $iscc = Find-Iscc
