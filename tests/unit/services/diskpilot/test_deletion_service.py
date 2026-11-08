@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+import pytest
 import win32con
 import win32file
 
@@ -55,6 +56,22 @@ def test_filter_refused_rejects_system_file(tmp_path: Path) -> None:
 
     assert allowed == []
     assert refused[0][0] == pagefile
+
+
+def test_file_in_protected_folder_stays_refused_even_when_that_folder_was_scanned(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Un dossier exclu peut être analysé explicitement (section 11), mais en lecture seule :
+    # aucun fichier situé dessous ne doit devenir supprimable. Chemin non créé : le refus
+    # pour chemin exclu intervient avant toute ouverture du fichier.
+    monkeypatch.setenv("SYSTEMDRIVE", tmp_path.drive)
+    program_files = Path(tmp_path.drive + "\\Program Files")
+    target = program_files / "Editeur" / "app.dll"
+
+    allowed, refused = filter_refused([target], scan_root=program_files)
+
+    assert allowed == []
+    assert refused == [(target, "Chemin exclu par défaut.")]
 
 
 def test_filter_refused_rejects_locked_file(tmp_path: Path) -> None:

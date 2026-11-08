@@ -13,6 +13,29 @@
 
 ---
 
+## Mise à jour du 2026-11-08 (3) — préversion 0.2.1-beta.2 (licence GPL v3)
+
+> Prime sur tout le reste du document.
+
+- **Version** `0.2.1b2` / tag `v0.2.1-beta.2` sur `695e30b` (commit à partir duquel les
+  artefacts ont été construits). Aucun changement fonctionnel depuis la beta.1.
+- **Licence intégrée** : `LICENSE` (GPL v3 intégrale) dans l'installateur (page de licence +
+  dossier) et le ZIP ; `THIRD-PARTY-LICENSES.txt` généré par `scripts/third_party_licenses.py`
+  (importlib.metadata : expressions SPDX PEP 639, textes de licence, licence Python, texte
+  LGPL v3 de `licenses/LGPL-3.0.txt` car PySide6 ne livre pas ce texte) ; ressource de version
+  Windows de l'exe générée par `nexusdesk.spec` depuis `pyproject.toml` ; métadonnées Inno
+  (éditeur, licence, version).
+- **Noms des artefacts** : `NexusDesk-v<version>-Setup.exe`, `NexusDesk-v<version>-portable.zip`,
+  `SHA256SUMS.txt` désormais en LF (`sha256sum -c` OK).
+- **Vérifié sans droits administrateur** (intégrité moyenne) : check.ps1 vert ; 105 tests +
+  1 ignoré ; nouveau test `test_file_in_protected_folder_stays_refused_even_when_that_folder_was_scanned` ;
+  exe portable et installé pilotés par UI Automation (volumes, analyse, doublons, exclusion
+  personnalisée appliquée et affichée dans Paramètres → DiskPilot) ; installation et
+  désinstallation silencieuses ; SHA-256 vérifiées.
+- **Non vérifié** : affichage de la page de licence de l'installateur en mode interactif (le
+  test est silencieux) ; suppression déclenchée depuis l'exe (tests automatisés seulement).
+- **Dossiers à trier par l'utilisateur** : `release\_essai-*` (artefacts d'essai non publiés).
+
 ## Mise à jour du 2026-11-08 (2) — préversion 0.2.1-beta.1 publiée
 
 > Prime sur tout le reste du document.
