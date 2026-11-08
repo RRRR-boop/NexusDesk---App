@@ -42,32 +42,9 @@ function Write-ThirdPartyLicenses([string]$destination, [string]$version) {
     $requirements = uv export --no-dev --no-hashes --no-emit-project --format requirements-txt
     $packages = $requirements | Where-Object { $_ -match '^[A-Za-z0-9]' } | ForEach-Object { ($_ -split '[=<>; ]')[0] } | Sort-Object -Unique
     if (-not $packages) { throw "Impossible de lister les dependances d'execution (uv export)." }
-    $inventory = Join-Path $env:TEMP "nexusdesk-third-party-$PID.txt"
-    uv run pip-licenses --packages @packages --with-license-file --no-license-path --with-notice-file --format=plain-vertical --output-file $inventory | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "pip-licenses a echoue (code $LASTEXITCODE)" }
-    $pythonLicense = uv run python -c "import os, sys; print(open(os.path.join(sys.base_prefix, 'LICENSE.txt'), encoding='utf-8').read())"
-
-    $header = @(
-        "NexusDesk $version - avis de licences",
-        "==========================================",
-        "",
-        "NexusDesk est un logiciel libre distribue sous la GNU General Public License v3.0",
-        "(GPL-3.0-only) : voir le fichier LICENSE fourni avec cette distribution.",
-        "Code source correspondant a cette version : $repoUrl/tree/v$version",
-        "",
-        "Cette distribution embarque les composants tiers ci-dessous, chacun sous sa propre",
-        "licence, toutes compatibles avec la GPL v3. Qt / PySide6 / shiboken6 sont utilises sous",
-        "LGPL v3 : leurs bibliotheques sont livrees comme fichiers separes (dossier _internal) et",
-        "peuvent etre remplacees par l'utilisateur. Le chargeur PyInstaller est distribue sous",
-        "GPL v2 avec une exception explicite autorisant toute licence pour le programme empaquete.",
-        "",
-        "------------------------------------------------------------------------------",
-        "Interpreteur Python $((uv run python -c 'import platform; print(platform.python_version())').Trim()) (python312.dll et bibliotheque standard)",
-        "------------------------------------------------------------------------------"
-    )
-    $separator = @("", "------------------------------------------------------------------------------", "Composants Python tiers (nom, version, licence, texte de licence, avis)", "------------------------------------------------------------------------------", "")
-    ($header + $pythonLicense + $separator + (Get-Content $inventory -Encoding utf8)) | Set-Content -Path $destination -Encoding utf8
-    Remove-Item $inventory
+    # Metadonnees lues directement (licence SPDX PEP 639, fichiers de licence, texte LGPL v3).
+    uv run python -I scripts/third_party_licenses.py --version $version --output $destination @packages
+    if ($LASTEXITCODE -ne 0) { throw "Generation de THIRD-PARTY-LICENSES.txt en echec (code $LASTEXITCODE)" }
 }
 
 Push-Location $repoRoot
