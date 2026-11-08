@@ -13,6 +13,33 @@
 
 ---
 
+## Mise à jour du 2026-11-08 (4) — préversion 0.2.1-beta.3 (remplace beta.1 et beta.2)
+
+> Prime sur tout le reste du document.
+
+- **Anomalie corrigée (bloquante)** : dans l'exécutable, toute analyse rencontrant un fichier à
+  liens physiques échouait (« No module named 'win32timezone' ») : `get_hardlink_key` →
+  `win32file.GetFileInformationByHandle` → pywin32 importe `win32timezone` à l'exécution,
+  invisible pour PyInstaller. Correction : `hiddenimports=["win32timezone"]` dans
+  `nexusdesk.spec` ; garde-fou `tests/unit/test_packaging.py`. Reproduit sur l'exe beta.2
+  avant correction, absent après. Les tests sur les sources ne pouvaient pas le voir.
+- **Icône** : `src/nexusdesk/resources/icons/app.ico` (9 tailles, 16–256 px, PNG dans ICO)
+  généré par `scripts/make_icon.py` depuis `icon_provider.render_app_icon` (glyphe `app.svg`
+  blanc sur carré arrondi `#7C3AED`) ; utilisé par l'exe (`icon=`), l'installateur
+  (`SetupIconFile`), donc les raccourcis, et par les fenêtres (`qt_app.setWindowIcon`).
+  Régénérer `app.ico` si `app.svg` ou les couleurs de marque changent.
+- **Leçon** : tester l'exécutable sur de **vraies** arborescences (liens physiques, disque
+  entier), pas seulement sur un petit dossier synthétique.
+- **Vérifié sur l'exe beta.3** (sans élévation, sans Python dans le PATH) : `C:\` complet =
+  1 068 981 fichiers, 170 863 dossiers, 157,9 Go, 180 234 liens physiques dédupliqués, ~23 min,
+  pic ~1,8 Go, aucune erreur ; `D:\` = 7 442 fichiers, 200,1 Go, ~2 s, pic 181 Mo ;
+  109 tests + 1 ignoré ; icône vérifiée dans l'exe (9 images), l'installateur, le raccourci
+  et l'entrée Applications ; installation/désinstallation propres, données conservées.
+- **Consigne utilisateur** : ne plus lancer de scan sur `C:\` (scan entier trop long et
+  coûteux) ; tests sur des dossiers dédiés ou `D:\` uniquement avec son accord.
+- Releases `v0.2.1-beta.1` et `v0.2.1-beta.2` retirées de GitHub après validation de la
+  beta.3 (tags conservés pour la traçabilité).
+
 ## Mise à jour du 2026-11-08 (3) — préversion 0.2.1-beta.2 (licence GPL v3)
 
 > Prime sur tout le reste du document.
