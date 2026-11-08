@@ -38,7 +38,6 @@
 | msgpack                   | 1.2.3            | UNKNOWN                                                        |
 | mypy                      | 1.20.2           | UNKNOWN                                                        |
 | mypy_extensions           | 1.1.0            | UNKNOWN                                                        |
-| nexusdesk                 | 0.2.1b1          | Proprietary                                                    |
 | nodeenv                   | 1.11.0           | BSD License                                                    |
 | packageurl-python         | 0.17.6           | MIT License                                                    |
 | packaging                 | 26.3             | UNKNOWN                                                        |

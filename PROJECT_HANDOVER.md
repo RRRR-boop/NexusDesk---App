@@ -39,9 +39,11 @@
   fusionnée dans `main` (commit `0e1a642`, avec le fichier `LICENSE` GPL v3 ajouté sur
   GitHub) ; `lot-0-socle` et `lot-1-diskpilot` ont été supprimées (local et GitHub), tous
   leurs commits étant dans `main`. **Développer désormais directement sur `main`.**
-- **Incohérence de licence à trancher** : `LICENSE` = GPL v3 (ajouté par l'utilisateur), mais
-  `pyproject.toml`, `README.md` et `docs/licences-tierces.md` indiquent « Proprietary ».
-- **Prochaines étapes** : licence, décision sur la performance du lot 1, puis lot 2 NetWatch.
+- **Licence tranchée par l'utilisateur : GPL v3** (`GPL-3.0-only`, fichier `LICENSE`) ;
+  `pyproject.toml`, `README.md`, `CHANGELOG.md` et `docs/licences-tierces.md` alignés. La
+  question ouverte « publier en open source » (cahier §22) est donc résolue. Toute nouvelle
+  dépendance doit être compatible GPL v3.
+- **Prochaines étapes** : décision sur la performance du lot 1, puis lot 2 NetWatch.
 
 ## Mise à jour du 2026-11-08 — reprise effective sur le nouvel ordinateur
 

@@ -3,6 +3,14 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Le détail honnête
 de chaque lot (fait, vérifié, non vérifié, limites) est dans `docs/journal-des-lots.md`.
 
+## [Non publié]
+
+### Modifié
+
+- Licence : NexusDesk est désormais distribué sous **GPL v3** (`GPL-3.0-only`, fichier
+  `LICENSE`) au lieu d'une licence propriétaire. La préversion 0.2.1-beta.1 a été publiée
+  alors que les métadonnées indiquaient encore « Proprietary ».
+
 ## [0.2.1-beta.1] — 2026-11-08 — Préversion
 
 Première version distribuée : socle (lot 0) et module DiskPilot (lot 1). Les cinq autres

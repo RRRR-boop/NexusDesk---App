@@ -4,7 +4,8 @@ version = "0.2.1b1"
 description = "Boîte à outils Windows 11 locale, gratuite et sans télémétrie"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
-license = { text = "Proprietary" }
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 
 dependencies = [
     "pyside6>=6.8,<7",

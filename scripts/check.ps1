@@ -31,7 +31,8 @@ try {
 
     Write-Host "== Inventaire des licences ==" -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path "docs" | Out-Null
-    uv run pip-licenses --format=markdown --output-file docs/licences-tierces.md
+    # Composants tiers uniquement : la licence de NexusDesk (GPL-3.0-only) est dans LICENSE.
+    uv run pip-licenses --format=markdown --ignore-packages nexusdesk --output-file docs/licences-tierces.md
     if ($LASTEXITCODE -ne 0) {
         throw "Echec : inventaire des licences (code $LASTEXITCODE)"
     }

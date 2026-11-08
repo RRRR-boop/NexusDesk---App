@@ -95,5 +95,10 @@ Le cahier des charges complet est dans `docs/cahier-des-charges-v2.md` ; l'archi
 
 ## Licence
 
-Logiciel propriétaire (`pyproject.toml`) : tous droits réservés. Les licences des composants
-tiers sont listées dans `docs/licences-tierces.md`.
+NexusDesk est un logiciel libre distribué sous licence **GNU General Public License v3.0**
+(`GPL-3.0-only`) : voir le fichier [LICENSE](LICENSE). Vous pouvez l'utiliser, l'étudier, le
+modifier et le redistribuer selon les termes de cette licence ; toute version redistribuée,
+modifiée ou non, doit rester sous GPL v3 avec son code source.
+
+Les licences des composants tiers sont listées dans `docs/licences-tierces.md` ; toutes celles
+des composants embarqués dans l'exécutable sont compatibles avec la GPL v3 (PySide6 : LGPL v3).
