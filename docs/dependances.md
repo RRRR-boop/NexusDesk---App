@@ -1,8 +1,9 @@
 # Dépendances
 
 Toute nouvelle dépendance doit être ajoutée ici avec son rôle, sa licence et l'alternative
-écartée (section 3 et section 21.7). Les dépendances ci-dessous sont celles introduites par
-le Lot 0.
+écartée (section 3 et section 21.7).
+
+## Lot 0
 
 | Dépendance | Rôle | Licence | Alternative écartée |
 | --- | --- | --- | --- |
@@ -21,6 +22,13 @@ le Lot 0.
 | `pip-audit` | Audit de vulnérabilités des dépendances | Apache 2.0 | `safety` (base de données moins ouverte) |
 | `pip-licenses` | Inventaire des licences tierces | MIT | Vérification manuelle (source d'erreur) |
 | `types-pywin32` | Annotations de types pour mypy --strict sur pywin32 | PSF | `# type: ignore` généralisé (perte de vérification) |
+
+## Lot 1
+
+| Dépendance | Rôle | Licence | Alternative écartée |
+| --- | --- | --- | --- |
+| `psutil` | Liste des volumes et usage disque (`disk_partitions`/`disk_usage`), portable, complète `win32api.GetVolumeInformation`/`GetDriveType` pour le libellé/type | BSD-3-Clause | Appels `GetLogicalDrives`/`GetDiskFreeSpaceEx` maison via `ctypes` (plus de code pour un résultat équivalent) |
+| `types-psutil` | Annotations de types pour mypy --strict sur psutil | PSF | `# type: ignore` généralisé (perte de vérification) |
 
 ## Choix écartés (section 3)
 

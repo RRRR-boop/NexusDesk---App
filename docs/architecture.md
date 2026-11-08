@@ -1,4 +1,4 @@
-# Architecture (Lot 0)
+# Architecture (Lots 0-1)
 
 Voir aussi `docs/adr/` pour les décisions structurantes détaillées.
 
@@ -65,3 +65,40 @@ indisponible). Les icônes SVG sont chargées via `QSvgRenderer` + composition `
 `MainWindow` : navigation latérale repliable (`NavigationSidebar`), raccourcis `Ctrl+1` à
 `Ctrl+7` (tableau de bord + 6 modules), `Paramètres`/`Diagnostic` accessibles par boutons
 dédiés. La croix réduit dans le tray par défaut (ADR-0006).
+
+## DiskPilot (`services/diskpilot/`, `ui/pages/diskpilot/`) — Lot 1
+
+Premier module métier réel (`services/` était vide au lot 0). Flux de bout en bout :
+
+- **Scan** (`services/diskpilot/scanner.py`) : parcours itératif à pile explicite sur
+  `os.scandir` (jamais `os.walk`/récursion profonde). `os.stat()` (pas `DirEntry.stat()` mis
+  en cache, qui ne reporte jamais `st_nlink` correctement sous Windows) + détection des liens
+  physiques conditionnelle (`st_nlink > 1` seulement, ADR-0011) pour tenir le budget d'1M de
+  fichiers en moins de 3 minutes. Jonctions/symlinks jamais suivis, seulement enregistrés
+  (`DiskLinkEntry`). Fichiers OneDrive à la demande jamais ouverts ni lus (détection par
+  masque d'attributs `FILE_ATTRIBUTE_RECALL_ON_OPEN`/`RECALL_ON_DATA_ACCESS`).
+- **Doublons** (`duplicate_finder.py`) : regroupement par taille exacte → empreinte
+  partielle (64 Ko tête/queue) → empreinte complète, avec cache persistant par
+  `(chemin, taille, date de modification)`.
+- **Suppression** (`deletion_service.py`) : revérification taille/date juste avant l'envoi à
+  la Corbeille (`build_preview`), refus systématique des fichiers système/exclus/verrouillés
+  (`filter_refused`), délégation au port `SendToRecycleBin` (jamais d'appel Windows direct
+  depuis `services/`). Suppression **définitive** non câblée ce lot (réglage
+  `permanent_delete_enabled` existe, décoché par défaut).
+- **Persistance** (`repositories/diskpilot_scan_repository.py` et consorts) : dossiers
+  persistés jusqu'à la profondeur 4, 1000 plus gros fichiers par scan, échantillon de 5000
+  entrées ignorées — les compteurs agrégés (`DiskScan.file_count`, etc.) ne sont jamais
+  tronqués. Rétention des 5 derniers scans `completed` par racine via `DELETE` + cascade FK
+  (ADR-0013), auto-guérison d'un scan `running` orphelin au démarrage
+  (`mark_stale_running_as_failed`).
+- **Cache d'empreintes** : base SQLite séparée (`diskpilot_hash_cache.db`), hors chaîne
+  Alembic, sa propre `WriteQueue` (ADR-0015).
+- **Interface** (`ui/pages/diskpilot/`, ADR-0012) : sous-paquet avec un panneau par
+  sous-vue, widget `TreemapWidget` (algorithme squarifié de Bruls/Huizing/van Wijk, mise en
+  page mise en cache, recalculée seulement au redimensionnement ou à un nouveau dossier
+  affiché — jamais à chaque `paintEvent`, jamais rafraîchie pendant un scan en direct).
+  `DeletionDialog` modale partagée par tous les panneaux qui proposent une suppression,
+  ce qui sérialise naturellement l'usage du `DeletionViewModel` partagé sans qu'aucun
+  panneau n'ait à filtrer les signaux déclenchés par un autre.
+- **Corbeille** : `SHFileOperation` plutôt que `IFileOperation` (ADR-0010), appelé fichier
+  par fichier pour un rapport d'échec partiel fiable.

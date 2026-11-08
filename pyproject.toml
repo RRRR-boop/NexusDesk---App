@@ -1,6 +1,6 @@
 [project]
 name = "nexusdesk"
-version = "0.1.0"
+version = "0.2.1b1"
 description = "Boîte à outils Windows 11 locale, gratuite et sans télémétrie"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -13,6 +13,7 @@ dependencies = [
     "pydantic>=2.6,<3",
     "pydantic-settings>=2.2,<3",
     "pywin32>=306; sys_platform == 'win32'",
+    "psutil>=5.9,<7",
 ]
 
 [dependency-groups]
@@ -29,6 +30,7 @@ dev = [
     "pip-audit>=2.7,<3",
     "pip-licenses>=4.4,<5",
     "types-pywin32>=306; sys_platform == 'win32'",
+    "types-psutil>=5.9,<8",
 ]
 
 [build-system]

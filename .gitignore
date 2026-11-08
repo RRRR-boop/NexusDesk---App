@@ -7,6 +7,7 @@ __pycache__/
 # Build / packaging
 dist/
 build/
+release/
 *.spec.bak
 
 # Bases de données locales (jamais commitées : données utilisateur)
@@ -35,3 +36,6 @@ reports/
 
 # Configuration locale Claude Code (propre à la machine)
 .claude/settings.local.json
+
+# Configuration générée par l'outil d'agent Serena (propre à la machine, hors projet)
+.serena/

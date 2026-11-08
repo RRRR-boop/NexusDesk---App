@@ -38,7 +38,7 @@
 | msgpack                   | 1.2.3            | UNKNOWN                                                        |
 | mypy                      | 1.20.2           | UNKNOWN                                                        |
 | mypy_extensions           | 1.1.0            | UNKNOWN                                                        |
-| nexusdesk                 | 0.1.0            | Proprietary                                                    |
+| nexusdesk                 | 0.2.1b1          | Proprietary                                                    |
 | nodeenv                   | 1.11.0           | BSD License                                                    |
 | packageurl-python         | 0.17.6           | MIT License                                                    |
 | packaging                 | 26.3             | UNKNOWN                                                        |
@@ -50,6 +50,7 @@
 | platformdirs              | 4.13.5           | MIT License                                                    |
 | pluggy                    | 1.7.0            | MIT License                                                    |
 | pre-commit                | 3.8.0            | MIT License                                                    |
+| psutil                    | 6.1.1            | BSD License                                                    |
 | py-serializable           | 2.1.0            | Apache Software License                                        |
 | pydantic                  | 2.14.1           | UNKNOWN                                                        |
 | pydantic-settings         | 2.16.1           | MIT License                                                    |
@@ -70,6 +71,7 @@
 | shiboken6                 | 6.12.0           | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only                  |
 | sortedcontainers          | 2.4.0            | Apache Software License                                        |
 | tomli_w                   | 1.2.0            | MIT License                                                    |
+| types-psutil              | 7.2.2.20260906   | UNKNOWN                                                        |
 | types-pywin32             | 312.0.0.20261024 | UNKNOWN                                                        |
 | typing-inspection         | 0.4.4            | UNKNOWN                                                        |
 | typing_extensions         | 4.16.0           | UNKNOWN                                                        |
