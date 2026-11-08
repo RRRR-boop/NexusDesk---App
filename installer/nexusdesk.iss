@@ -55,6 +55,8 @@ Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayIcon={app}\NexusDesk.exe
+; Icône de marque de l'installateur lui-même (même fichier que celle de NexusDesk.exe).
+SetupIconFile={#SourcePath}\..\src\nexusdesk\resources\icons\app.ico
 UninstallDisplayName=NexusDesk {#AppVersion}
 CloseApplications=yes
 SetupLogging=yes

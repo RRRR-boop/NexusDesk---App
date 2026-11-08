@@ -3,7 +3,26 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Le détail honnête
 de chaque lot (fait, vérifié, non vérifié, limites) est dans `docs/journal-des-lots.md`.
 
-## [0.2.1-beta.2] — 2026-11-08 — Préversion
+## [0.2.1-beta.3] — 2026-11-08 — Préversion
+
+Remplace les préversions 0.2.1-beta.1 et 0.2.1-beta.2, retirées car défectueuses.
+
+### Corrigé
+
+- **DiskPilot dans l'exécutable** : l'analyse échouait avec « No module named
+  'win32timezone' » dès qu'un dossier contenait un fichier à liens physiques (fréquent :
+  environnements Python, caches de paquets, dossiers synchronisés). pywin32 importe ce module
+  à l'exécution, invisible pour PyInstaller ; il est désormais embarqué explicitement.
+- **Icône** : l'exécutable, l'installateur, les raccourcis et la barre des tâches affichaient
+  l'icône générique de Python/Qt. Ils utilisent désormais l'icône NexusDesk (fichier `.ico`
+  multirésolution, 16 à 256 px).
+
+### Ajouté
+
+- `scripts/make_icon.py` (génération de `app.ico`) et tests de non-régression sur la
+  configuration d'empaquetage (`tests/unit/test_packaging.py`).
+
+## [0.2.1-beta.2] — 2026-11-08 — Préversion (retirée)
 
 Aucune modification fonctionnelle par rapport à 0.2.1-beta.1 : cette version intègre
 correctement la licence.
@@ -27,7 +46,7 @@ correctement la licence.
   version, éditeur, licence.
 - `SHA256SUMS.txt` aux fins de ligne LF, vérifiable aussi par `sha256sum -c`.
 
-## [0.2.1-beta.1] — 2026-11-08 — Préversion
+## [0.2.1-beta.1] — 2026-11-08 — Préversion (retirée)
 
 Première version distribuée : socle (lot 0) et module DiskPilot (lot 1). Les cinq autres
 modules affichent une page « Module à venir » et ne proposent aucune fonction.

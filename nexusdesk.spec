@@ -71,7 +71,10 @@ a = Analysis(
     pathex=[str(src_dir)],
     binaries=[],
     datas=datas,
-    hiddenimports=[],
+    # pywin32 importe win32timezone à l'exécution (dates renvoyées par
+    # GetFileInformationByHandle, utilisé pour les liens physiques) : invisible pour
+    # l'analyse statique de PyInstaller, d'où « No module named 'win32timezone' » sans lui.
+    hiddenimports=["win32timezone"],
     excludes=excluded_qt_modules,
     noarchive=False,
 )
@@ -121,6 +124,7 @@ exe = EXE(
     name="NexusDesk",
     console=False,
     version=version_info,
+    icon=str(icons_dir / "app.ico"),  # généré par scripts/make_icon.py
 )
 
 coll = COLLECT(

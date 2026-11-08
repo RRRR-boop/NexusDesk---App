@@ -4,7 +4,7 @@ Boîte à outils Windows locale, gratuite et sans télémétrie : aucun compte, 
 aucune donnée envoyée. Le projet est livré par lots ; cette préversion contient le **socle** et
 le module **DiskPilot** (analyse de l'espace disque).
 
-> **Préversion 0.2.1-beta.2.** Les modules AppManager, NetWatch, ScreenText, LogDoctor,
+> **Préversion 0.2.1-beta.3.** Les modules AppManager, NetWatch, ScreenText, LogDoctor,
 > ClipVault et le tableau de bord ne sont pas encore développés : leur page l'indique
 > clairement et ne propose aucune fonction.
 

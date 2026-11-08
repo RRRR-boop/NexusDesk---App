@@ -53,7 +53,7 @@ from nexusdesk.ui.pages.netwatch_page import NetWatchPage
 from nexusdesk.ui.pages.screentext_page import ScreenTextPage
 from nexusdesk.ui.pages.settings_page import SettingsPage
 from nexusdesk.ui.shell.main_window import MainWindow
-from nexusdesk.ui.theme.icon_provider import load_icon
+from nexusdesk.ui.theme.icon_provider import load_app_icon, load_icon
 from nexusdesk.ui.theme.theme_manager import ThemeManager
 from nexusdesk.ui.theme.tokens import colors_for
 from nexusdesk.viewmodels.diagnostics_viewmodel import DiagnosticsViewModel
@@ -172,6 +172,8 @@ class Application:
         self.theme_manager.apply(appearance)
         self.main_window.set_close_behavior(self.settings_viewmodel.settings.general.close_behavior)
 
+        # Icône de marque des fenêtres et de la barre des tâches (la même que NexusDesk.exe).
+        qt_app.setWindowIcon(load_app_icon())
         self.tray_icon = TrayIcon(load_icon("app", icon_color, 32))
         self.tray_icon.setToolTip("NexusDesk")
         self.tray_icon.open_action.triggered.connect(self._show_main_window)
